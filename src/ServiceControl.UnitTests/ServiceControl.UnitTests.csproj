@@ -16,12 +16,12 @@
     <PackageReference Include="ApprovalTests" Version="3.*" />
     <PackageReference Include="ApprovalUtilities" Version="3.*" />
     <PackageReference Include="Newtonsoft.Json" Version="8.0.3" />
-    <PackageReference Include="NServiceBus" Version="5.2.19" />
+    <PackageReference Include="NServiceBus" Version="5.2.21" />
     <PackageReference Include="NUnit" Version="3.7.*" />
     <PackageReference Include="RavenDB.Client" Version="2.5.2996" />
     <PackageReference Include="RavenDB.Database" Version="2.5.2996" />
     <PackageReference Include="RavenDB.Embedded" Version="2.5.2996" />
-    <PackageReference Include="ServiceControl.Contracts" Version="1.0.0" />
+    <PackageReference Include="ServiceControl.Contracts" Version="1.1.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ServiceControl\ServiceControl.csproj" />

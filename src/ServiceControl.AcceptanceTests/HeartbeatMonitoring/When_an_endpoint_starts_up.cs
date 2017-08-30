@@ -1,9 +1,7 @@
 ﻿namespace ServiceBus.Management.AcceptanceTests.HeartbeatMonitoring
 {
     using System;
-    using System.IO;
     using System.Linq;
-    using System.Reflection;
     using Contexts;
     using NServiceBus;
     using NServiceBus.AcceptanceTesting;

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
+  <!-- Note: This targets file copies all of the files 
+      from the Raven Database nuget lib folder into the output folder. 
+      The Raven Database needs them but they are not copied by default -->
   <Target Name="MyPreCompileTarget" AfterTargets="Build">
     <CreateItem Include="@(PackageDefinitions)" Condition="'%(Name)' == 'RavenDB.Database'">
        <Output TaskParameter="Include" ItemName="RavenDBRef" />

@@ -5,6 +5,7 @@ namespace ServiceControl.UnitTests
     using System.Runtime.CompilerServices;
     using NUnit.Framework;
 
+    // NOTE: This class is included to fix the "current directory" for Approval Tests
     [SetUpFixture]
     public class SetUpFixture
     {

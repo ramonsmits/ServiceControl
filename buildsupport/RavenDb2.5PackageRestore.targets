@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <Target Name="MyPreCompileTarget" AfterTargets="Build">
+    <CreateItem Include="@(PackageDefinitions)" Condition="'%(Name)' == 'RavenDB.Database'">
+       <Output TaskParameter="Include" ItemName="RavenDBRef" />
+    </CreateItem>
+    <PropertyGroup>
+      <RavenDBDir>@(RavenDBRef->'%(ResolvedPath)')/lib/net45/*.*</RavenDBDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <RavenDbFiles Include="$(RavenDBDir)" />
+    </ItemGroup>
+    <Message Text="$(RavenDBDir)" Importance="High" />
+    <Copy SourceFiles="@(RavenDBFiles)" DestinationFolder="$(OutDir)" />
+  </Target>
+</Project>

@@ -111,9 +111,9 @@ namespace ServiceBus.Management.AcceptanceTests
 
         private void AssertTransportNotExplicitlyIgnored()
         {
-            if (TestContext.CurrentContext.Test.Properties.Contains(ignoreTransportsKey))
+            if (TestContext.CurrentContext.Test.Properties.ContainsKey(ignoreTransportsKey))
             {
-                if (((string[]) TestContext.CurrentContext.Test.Properties[ignoreTransportsKey]).Contains(transportToUse.Name))
+                if (TestContext.CurrentContext.Test.Properties[ignoreTransportsKey].Contains(transportToUse.Name))
                 {
                     ignored = true;
                     Assert.Inconclusive($"Transport {transportToUse.Name} has been explicitly ignored for test {TestContext.CurrentContext.Test.Name}");

@@ -1,6 +1,7 @@
 ﻿namespace ServiceBus.Management.AcceptanceTests.HeartbeatMonitoring
 {
     using System;
+    using System.IO;
     using System.Linq;
     using System.Reflection;
     using Contexts;
@@ -43,7 +44,7 @@
                     var hostIdentifier = Guid.NewGuid();
                     c.GetSettings().Set("ServiceControl.CustomHostIdentifier", hostIdentifier);
                     c.UniquelyIdentifyRunningInstance().UsingCustomIdentifier(hostIdentifier);
-                }).IncludeAssembly(Assembly.LoadFrom("ServiceControl.Plugin.Nsb5.Heartbeat.dll"));
+                }).WithHeartbeats();
             }
 
             class RetrieveHostIdentifier : IWantToRunWhenBusStartsAndStops

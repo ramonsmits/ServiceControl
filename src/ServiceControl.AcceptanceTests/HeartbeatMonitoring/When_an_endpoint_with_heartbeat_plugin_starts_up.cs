@@ -40,7 +40,7 @@
             public StartingEndpoint()
             {
                 EndpointSetup<DefaultServerWithAudit>()
-                    .IncludeAssembly(Assembly.LoadFrom("ServiceControl.Plugin.Nsb5.Heartbeat.dll"));
+                    .WithHeartbeats();
             }
 
             class SendMessage : IWantToRunWhenBusStartsAndStops

@@ -43,7 +43,7 @@
             {
                 EndpointSetup<DefaultServerWithAudit>(c => c.DisableFeature<AutoSubscribe>())
                     .AddMapping<MyEvent>(typeof(EndpointThatIsHostingTheSaga))
-                    .IncludeAssembly(Assembly.LoadFrom("ServiceControl.Plugin.Nsb5.SagaAudit.dll"));
+                    .WithSagaAudit();
             }
         }
 

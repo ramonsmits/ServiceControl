@@ -7,4 +7,4 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyCompany("NServiceBus Ltd.")]
 [assembly: AssemblyDescription("Management extension to NServiceBus.")]
 [assembly: InternalsVisibleTo("ServiceControl.UnitTests")]
-[assembly: InternalsVisibleTo("ServiceBus.Management.AcceptanceTests")]
+[assembly: InternalsVisibleTo("ServiceControl.AcceptanceTests")]

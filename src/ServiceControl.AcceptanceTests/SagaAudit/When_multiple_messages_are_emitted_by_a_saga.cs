@@ -54,7 +54,7 @@
                     c.DisableFeature<AutoSubscribe>();
                 })
                     .AddMapping<MessagePublishedBySaga>(typeof(EndpointThatIsHostingTheSaga))
-                    .IncludeAssembly(Assembly.LoadFrom("ServiceControl.Plugin.Nsb5.SagaAudit.dll"));
+                    .WithSagaAudit();
             }
 
             public class MySaga : Saga<MySagaData>, IAmStartedByMessages<MessageInitiatingSaga>

@@ -1,7 +1,11 @@
 ﻿namespace ServiceBus.Management.AcceptanceTests.Contexts
 {
     using System.Collections.Generic;
+    using System.IO;
+    using System.Reflection;
     using NServiceBus;
+    using NServiceBus.AcceptanceTesting;
+    using NUnit.Framework;
     using TransportIntegration;
 
     public static class ConfigureExtensions
@@ -28,6 +32,26 @@
             }
 
             config.UseTransport(transportDefinitionType).ConnectionString(connectionString);
+        }
+
+        public static EndpointConfigurationBuilder WithHeartbeats(this EndpointConfigurationBuilder builder)
+        {
+            var heartbeatsAssembly = Assembly.LoadFile(
+                Path.Combine(
+                    TestContext.CurrentContext.TestDirectory,
+                    "ServiceControl.Plugin.Nsb5.Heartbeat.dll"));
+
+            return builder.IncludeAssembly(heartbeatsAssembly);
+        }
+
+        public static EndpointConfigurationBuilder WithSagaAudit(this EndpointConfigurationBuilder builder)
+        {
+            var sagaAuditAssembly = Assembly.LoadFile(
+                Path.Combine(
+                    TestContext.CurrentContext.TestDirectory,
+                    "ServiceControl.Plugin.Nsb5.SagaAudit.dll"));
+
+            return builder.IncludeAssembly(sagaAuditAssembly);
         }
     }
 }

@@ -85,7 +85,7 @@
                 EndpointSetup<DefaultServerWithoutAudit>(c =>
                 {
                     c.EndpointName(EndpointName);
-                }).IncludeAssembly(Assembly.LoadFrom("ServiceControl.Plugin.Nsb5.Heartbeat.dll"));
+                }).WithHeartbeats();
             }
         }
 

@@ -8,7 +8,7 @@ namespace ServiceControl.UnitTests
     [SetUpFixture]
     public class SetUpFixture
     {
-        [SetUp]
+        [OneTimeSetUp]
         public void SetUp()
         {
             FixCurrentDirectory();

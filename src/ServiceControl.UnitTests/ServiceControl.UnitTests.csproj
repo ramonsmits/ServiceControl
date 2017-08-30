@@ -3,8 +3,10 @@
   <PropertyGroup>
     <TargetFrameworks>net452</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <Optimize>False</Optimize>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <!--<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>-->
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
@@ -12,11 +14,11 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="ApprovalTests" Version="3.0.13" />
-    <PackageReference Include="ApprovalUtilities" Version="3.0.13" />
+    <PackageReference Include="ApprovalTests" Version="3.*" />
+    <PackageReference Include="ApprovalUtilities" Version="3.*" />
     <PackageReference Include="Newtonsoft.Json" Version="8.0.3" />
     <PackageReference Include="NServiceBus" Version="5.2.19" />
-    <PackageReference Include="NUnit" Version="2.6.4" />
+    <PackageReference Include="NUnit" Version="3.7.*" />
     <PackageReference Include="RavenDB.Client" Version="2.5.2996" />
     <PackageReference Include="RavenDB.Database" Version="2.5.2996" />
     <PackageReference Include="RavenDB.Embedded" Version="2.5.2996" />

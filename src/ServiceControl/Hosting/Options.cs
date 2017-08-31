@@ -145,7 +145,9 @@ namespace Particular.ServiceControl.Hosting
     using System.ComponentModel;
     using System.IO;
     using System.Runtime.Serialization;
+#pragma warning disable DE0002 // API is deprecated
     using System.Security.Permissions;
+#pragma warning restore DE0002 // API is deprecated
     using System.Text;
     using System.Text.RegularExpressions;
 

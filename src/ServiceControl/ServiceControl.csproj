@@ -20,6 +20,12 @@
   <PropertyGroup>
     <ApplicationIcon>Operations.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);REGISTRYLICENSESOURCE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Particular.Licensing.Sources" Version="1.0.0-alpha0004" PrivateAssets="All" />
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.configuration" />
@@ -53,7 +59,6 @@
     <PackageReference Include="NServiceBus.NLog" Version="1.1.0" />
     <PackageReference Include="Owin" Version="1.0" />
     <PackageReference Include="Owin.Metrics" Version="0.3.7" />
-    <!-- Licensing Sources -->
     <PackageReference Include="RavenDB.Client" Version="2.5.2996" />
     <PackageReference Include="RavenDB.Database" Version="2.5.2996" />
     <PackageReference Include="RavenDB.Embedded" Version="2.5.2996" />

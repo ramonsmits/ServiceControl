@@ -7,9 +7,6 @@
     <TargetFrameworks>net452</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <OutputType>exe</OutputType>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>

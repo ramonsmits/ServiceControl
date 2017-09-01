@@ -5,12 +5,10 @@
     using System.Windows;
     using System.Windows.Input;
     using System.Windows.Threading;
-    using PropertyChanged;
     using ServiceControl.Config.Framework;
     using ServiceControl.Config.Framework.Commands;
     using ICommand = System.Windows.Input.ICommand;
 
-    [ImplementPropertyChanged]
     public partial class ExceptionMessageBox: IProgressViewModel
     {
         static RaygunFeedback reporter;

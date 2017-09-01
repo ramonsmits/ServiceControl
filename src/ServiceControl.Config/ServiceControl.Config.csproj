@@ -4,7 +4,9 @@
     <AllowedReferenceRelatedFileExtensions>.pdb</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <PropertyGroup>
+    <LanguageTargets>$(MSBuildExtensionsPath)\$(VisualStudioVersion)\Bin\Microsoft.CSharp.targets</LanguageTargets>
     <OutputType>WinExe</OutputType>
+    <OutputTypeEx>winexe</OutputTypeEx>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ServiceControl.Config</RootNamespace>
     <AssemblyName>ServiceControlConfig</AssemblyName>
@@ -17,21 +19,37 @@
   <PropertyGroup>
     <ApplicationIcon>App.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Page Include="**\*.xaml" SubType="Designer" Generator="MSBuild:UpdateDesignTimeXaml" />
+    <Compile Update="**\*.xaml.cs" SubType="Designer" DependentUpon="%(Filename)" />
+    <Compile Update="**\*.cs" SubType="Code" />
+
+    <!-- Resources -->
+    <EmbeddedResource Update="Properties\Resources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="Resources.Designer.cs" />
+    <Compile Update="Properties\Resources.Designer.cs" AutoGen="True" DependentUpon="Resources.resx" DesignTime="True" />
+
+    <!-- Settings -->
+    <None Update="Properties\Settings.settings" Generator="SettingsSingleFileGenerator" LastGenOutput="Settings.Designer.cs" />
+    <Compile Update="Properties\Settings.Designer.cs" AutoGen="True" DependentUpon="Settings.settings" />
+
+  </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="Autofac" Version="4.4.0" />
     <PackageReference Include="Caliburn.Micro" Version="3.0.3" />
     <PackageReference Include="Caliburn.Micro.Core" Version="3.0.3" />
     <PackageReference Include="FluentValidation" Version="6.4.1" />
-    <PackageReference Include="Fody" Version="1.29.4" PrivateAssets="All" />
+    <PackageReference Include="Fody" Version="2.1.2" />
     <PackageReference Include="Mindscape.Raygun4Net" Version="5.4.1" />
-    <PackageReference Include="PropertyChanged.Fody" Version="1.52.1" PrivateAssets="All" />
-    <PackageReference Include="PropertyChanging.Fody" Version="1.27.2.0" PrivateAssets="All" />
+    <PackageReference Include="PropertyChanged.Fody" Version="2.1.4" />
+    <PackageReference Include="PropertyChanging.Fody" Version="1.28.0" />
     <PackageReference Include="reactiveui" Version="5.5.1" />
     <PackageReference Include="reactiveui-core" Version="5.5.1" />
     <PackageReference Include="reactiveui-platforms" Version="5.5.1" />
     <PackageReference Include="Rx-Main" Version="2.2.5" />
     <PackageReference Include="Rx-XAML" Version="2.2.5" />
-    <PackageReference Include="Validar.Fody" Version="1.4.11.0" PrivateAssets="All" />
+    <PackageReference Include="Validar.Fody" Version="1.5.1" />
     <PackageReference Include="Windows7APICodePack-Core" Version="1.1.0.0" />
     <PackageReference Include="Windows7APICodePack-Shell" Version="1.1.0.0" />
   </ItemGroup>
@@ -39,6 +57,7 @@
   <ItemGroup>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Xaml" />
     <Reference Include="WindowsBase" />
@@ -70,4 +89,6 @@
   <Target Name="RemoveTranslationsAfterPackage" AfterTargets="AfterPackage">
     <RemoveDir Directories="@(FluentValidationExcludedCultures->'$(_PackageTempDir)\$(OutputPath)%(Filename)')" />
   </Target>
+  
+  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>

@@ -43,11 +43,38 @@ namespace ServiceControl.CompositeViews.Messages
 
         private Dictionary<string, string> instanceIdToApiUri;
         private Dictionary<string, string> apiUriToInstanceId;
+        private string currentInstanceId;
+        private string currentInvariantApiUri;
 
         public IDocumentStore Store { get; set; }
         public Settings Settings { get; set; }
         public Func<HttpClient> HttpClientFactory { get; set; }
-        public string CurrentInstanceId { get; set; }
+
+        public string CurrentInstanceId
+        {
+            get
+            {
+                if (currentInstanceId == null)
+                {
+                    currentInstanceId = InstanceIdGenerator.FromApiUrl(Settings.ApiUrl);
+                }
+
+                return currentInstanceId;
+            }
+        }
+
+        public string CurrentInvariantApiUri
+        {
+            get
+            {
+                if (currentInvariantApiUri == null)
+                {
+                    currentInvariantApiUri = Settings.ApiUrl.ToLowerInvariant();
+                }
+
+                return currentInvariantApiUri;
+            }
+        }
 
         public Dictionary<string, string> InstanceIdToApiUri
         {
@@ -56,8 +83,7 @@ namespace ServiceControl.CompositeViews.Messages
                 if (instanceIdToApiUri == null)
                 {
                     instanceIdToApiUri = Settings.RemoteInstances.ToDictionary(k => InstanceIdGenerator.FromApiUrl(k.ApiUri), v => v.ApiUri);
-                    CurrentInstanceId = InstanceIdGenerator.FromApiUrl(Settings.ApiUrl);
-                    instanceIdToApiUri.Add(CurrentInstanceId, Settings.ApiUrl);
+                    instanceIdToApiUri.Add(CurrentInstanceId, Settings.ApiUrl.ToLowerInvariant());
                 }
 
                 return instanceIdToApiUri;
@@ -71,7 +97,7 @@ namespace ServiceControl.CompositeViews.Messages
                 if (apiUriToInstanceId == null)
                 {
                     apiUriToInstanceId = Settings.RemoteInstances.ToDictionary(k => k.ApiUri, v => InstanceIdGenerator.FromApiUrl(v.ApiUri));
-                    apiUriToInstanceId.Add(Settings.ApiUrl, InstanceIdGenerator.FromApiUrl(Settings.ApiUrl));
+                    apiUriToInstanceId.Add(Settings.ApiUrl.ToLowerInvariant(), InstanceIdGenerator.FromApiUrl(Settings.ApiUrl));
                 }
 
                 return apiUriToInstanceId;
@@ -92,7 +118,7 @@ namespace ServiceControl.CompositeViews.Messages
                 var id = (string) instanceId;
                 if (id == CurrentInstanceId)
                 {
-                    tasks.Add(LocalQuery(currentRequest, input, CurrentInstanceId));
+                    tasks.Add(LocalQuery(currentRequest, input, ApiUriToInstanceId[Settings.ApiUrl.ToLowerInvariant()]));
                 }
                 else
                 {
@@ -105,7 +131,7 @@ namespace ServiceControl.CompositeViews.Messages
             }
             else
             {
-                tasks.Add(LocalQuery(currentRequest, input, CurrentInstanceId));
+                tasks.Add(LocalQuery(currentRequest, input, ApiUriToInstanceId[Settings.ApiUrl.ToLowerInvariant()]));
                 foreach (var remote in remotes)
                 {
                     tasks.Add(FetchAndParse(currentRequest, remote.ApiUri, ApiUriToInstanceId[remote.ApiUri]));

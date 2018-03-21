@@ -1,11 +1,9 @@
 namespace Particular.HealthMonitoring.Uptime
 {
     using System;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using NServiceBus.Logging;
-    using Particular.HealthMonitoring.Uptime.Api;
     using ServiceBus.Management.Infrastructure.Settings;
     using ServiceControl.Infrastructure;
     using ServiceControl.Infrastructure.DomainEvents;
@@ -13,21 +11,17 @@ namespace Particular.HealthMonitoring.Uptime
     class HeartbeatFailureDetector : IStartable
     {
         EndpointInstanceMonitoring monitoring;
+        EventInfrastructure eventInfrastructure;
         TimeSpan gracePeriod;
         Timer timer;
 
         static readonly ILog log = LogManager.GetLogger<HeartbeatFailureDetector>();
-        private IPersistEndpointUptimeInformation persister;
-        StatisticsViewModel viewModel;
-        private IDomainEvents domainEvents;
 
-        public HeartbeatFailureDetector(EndpointInstanceMonitoring monitoring, IDomainEvents domainEvents, IPersistEndpointUptimeInformation persister, StatisticsViewModel viewModel)
+        public HeartbeatFailureDetector(EndpointInstanceMonitoring monitoring, EventInfrastructure eventInfrastructure)
         {
-            this.domainEvents = domainEvents;
-            this.persister = persister;
-            this.viewModel = viewModel;
             gracePeriod = GetHeartbeatGracePeriod();
             this.monitoring = monitoring;
+            this.eventInfrastructure = eventInfrastructure;
         }
 
         static TimeSpan GetHeartbeatGracePeriod()
@@ -58,14 +52,8 @@ namespace Particular.HealthMonitoring.Uptime
                 log.Debug($"monitoring Endpoint Instances. Inactivity Threshold = {inactivityThreshold}");
 
                 var events = monitoring.CheckEndpoints(inactivityThreshold, now);
-                var enumerable = events as IDomainEvent[] ?? events.ToArray();
-                foreach (var domainEvent in enumerable)
-                {
-                    viewModel.Handle(domainEvent);
-                    domainEvents.Raise(domainEvent);
-                }
 
-                persister.Store(enumerable.OfType<IHeartbeatEvent>());
+                eventInfrastructure.Publish(events).GetAwaiter().GetResult();
             }
             catch (Exception exception)
             {

@@ -6,10 +6,9 @@ namespace Particular.HealthMonitoring.Uptime
     using Particular.HealthMonitoring.Uptime.Api;
     using ServiceControl.Infrastructure.DomainEvents;
 
-    class StatisticsViewModel
+    class StatisticsViewModel : BaseViewModel
     {
         ConcurrentDictionary<Guid, bool> statistics = new ConcurrentDictionary<Guid, bool>();
-
         IDomainEvents domainEvents;
 
         public StatisticsViewModel(IDomainEvents domainEvents)
@@ -17,33 +16,30 @@ namespace Particular.HealthMonitoring.Uptime
             this.domainEvents = domainEvents;
         }
 
-        public bool Handle(IHeartbeatEvent @event)
+        public bool Handle(IDomainEvent @event)
         {
-            return @event.TryApply<HeartbeatingEndpointDetected>(Handle)
-                   || @event.TryApply<EndpointHeartbeatRestored>(Handle)
-                   || @event.TryApply<EndpointFailedToHeartbeat>(Handle);
+            return TryHandle<HeartbeatingEndpointDetected>(@event, Handle)
+                   || TryHandle<EndpointHeartbeatRestored>(@event, Handle)
+                   || TryHandle<EndpointFailedToHeartbeat>(@event, Handle);
         }
 
-        IDomainEvent Handle(HeartbeatingEndpointDetected domainEvent)
-        {
-            statistics.AddOrUpdate(domainEvent.EndpointInstanceId, true, (_, __) => true);
-            RaiseChangedEvent();
-            return domainEvent;
-        }
-
-
-        IDomainEvent Handle(EndpointHeartbeatRestored domainEvent)
+        void Handle(HeartbeatingEndpointDetected domainEvent)
         {
             statistics.AddOrUpdate(domainEvent.EndpointInstanceId, true, (_, __) => true);
             RaiseChangedEvent();
-            return domainEvent;
         }
 
-        IDomainEvent Handle(EndpointFailedToHeartbeat domainEvent)
+
+        void Handle(EndpointHeartbeatRestored domainEvent)
+        {
+            statistics.AddOrUpdate(domainEvent.EndpointInstanceId, true, (_, __) => true);
+            RaiseChangedEvent();
+        }
+
+        void Handle(EndpointFailedToHeartbeat domainEvent)
         {
             statistics.AddOrUpdate(domainEvent.EndpointInstanceId, false, (_, __) => true);
             RaiseChangedEvent();
-            return domainEvent;
         }
 
         void RaiseChangedEvent()
@@ -56,5 +52,13 @@ namespace Particular.HealthMonitoring.Uptime
             });
         }
 
+        public EndpointMonitoringStats GetStats()
+        {
+            return new EndpointMonitoringStats
+            {
+                Active = statistics.Values.Count(v => v),
+                Failing = statistics.Values.Count(v => !v),
+            };
+        }
     }
 }

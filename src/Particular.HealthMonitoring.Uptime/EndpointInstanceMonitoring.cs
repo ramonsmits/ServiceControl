@@ -5,14 +5,11 @@ namespace Particular.HealthMonitoring.Uptime
     using System.Collections.Generic;
     using System.Linq;
     using Particular.HealthMonitoring.Uptime.Api;
-    using ServiceControl.Infrastructure.DomainEvents;
 
     class EndpointInstanceMonitoring
     {
         ConcurrentDictionary<Guid, EndpointInstanceMonitor> endpoints = new ConcurrentDictionary<Guid, EndpointInstanceMonitor>();
         ConcurrentDictionary<EndpointInstanceId, HeartbeatMonitor> heartbeats = new ConcurrentDictionary<EndpointInstanceId, HeartbeatMonitor>();
-        EndpointMonitoringStats previousStats;
-
 
         public void Initialize(IEnumerable<IHeartbeatEvent> events)
         {
@@ -37,32 +34,20 @@ namespace Particular.HealthMonitoring.Uptime
             return monitor.StartTrackingEndpoint();
         }
 
-        public IEnumerable<IDomainEvent> CheckEndpoints(DateTime threshold, DateTime currentTime)
+        public IHeartbeatEvent[] CheckEndpoints(DateTime threshold, DateTime currentTime)
         {
-            var events = new List<IDomainEvent>();
-            foreach (var entry in heartbeats)
-            {
-                var instanceId = entry.Key;
+            return heartbeats
+                .Select(entry => CheckEndpoint(threshold, currentTime, entry))
+                .Where(update => update != null)
+                .ToArray();
+        }
 
-                var monitor = GetOrCreateMonitor(instanceId.LogicalName, instanceId.HostName, instanceId.HostGuid);
-
-                var newState = entry.Value.MarkDeadIfOlderThan(threshold);
-
-                var update = monitor.UpdateStatus(newState.Status, newState.Timestamp, currentTime);
-                if (update != null)
-                {
-                    events.Add(update);
-                }
-            }
-
-            var stats = GetStats();
-            var statsUpdate = Update(stats);
-            if (statsUpdate != null)
-            {
-                events.Add(statsUpdate);
-            }
-
-            return events;
+        IHeartbeatEvent CheckEndpoint(DateTime threshold, DateTime currentTime, KeyValuePair<EndpointInstanceId, HeartbeatMonitor> entry)
+        {
+            var instanceId = entry.Key;
+            var monitor = GetOrCreateMonitor(instanceId.LogicalName, instanceId.HostName, instanceId.HostGuid);
+            var newState = entry.Value.MarkDeadIfOlderThan(threshold);
+            return monitor.UpdateStatus(newState.Status, newState.Timestamp, currentTime);
         }
 
         EndpointInstanceMonitor GetOrCreateMonitor(string name, string host, Guid hostId)
@@ -70,34 +55,6 @@ namespace Particular.HealthMonitoring.Uptime
             var endpointInstanceId = new EndpointInstanceId(name, host, hostId);
 
             return endpoints.GetOrAdd(endpointInstanceId.UniqueId, id => new EndpointInstanceMonitor(endpointInstanceId));
-        }
-
-        IDomainEvent Update(EndpointMonitoringStats stats)
-        {
-            var previousActive = previousStats?.Active ?? 0;
-            var previousDead = previousStats?.Failing ?? 0;
-            if (previousActive != stats.Active || previousDead != stats.Failing)
-            {
-                previousStats = stats;
-                return new HeartbeatsUpdated
-                {
-                    Active = stats.Active,
-                    Failing = stats.Failing,
-                    RaisedAt = DateTime.UtcNow
-                };
-            }
-
-            return null;
-        }
-
-        internal EndpointMonitoringStats GetStats()
-        {
-            var stats = new EndpointMonitoringStats();
-            foreach (var monitor in endpoints.Values)
-            {
-                monitor.AddTo(stats);
-            }
-            return stats;
         }
 
         public IHeartbeatEvent EnableMonitoring(Guid id)
@@ -111,22 +68,5 @@ namespace Particular.HealthMonitoring.Uptime
             EndpointInstanceMonitor monitor;
             return !endpoints.TryGetValue(id, out monitor) ? null : monitor.DisableMonitoring();
         }
-
-        internal EndpointsView[] GetEndpoints()
-        {
-            var list = new List<EndpointsView>();
-
-            var heartbeatLookup = heartbeats.ToLookup(x => x.Key, x => x.Value);
-
-            foreach (var endpoint in endpoints.Values)
-            {
-                var view = endpoint.GetView();
-                view.IsSendingHeartbeats = heartbeatLookup[endpoint.Id].Any(x => x.IsSendingHeartbeats());
-                list.Add(view);
-            }
-
-            return list.ToArray();
-        }
-
     }
 }

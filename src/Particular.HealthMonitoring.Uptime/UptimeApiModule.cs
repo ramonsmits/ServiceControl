@@ -8,11 +8,12 @@ namespace Particular.HealthMonitoring.Uptime
 
     class UptimeApiModule : NancyModule
     {
-        public UptimeApiModule(EndpointInstanceMonitoring monitoring, IPersistEndpointUptimeInformation persister)
+        public UptimeApiModule(EndpointInstanceMonitoring monitoring, IPersistEndpointUptimeInformation persister, 
+            StatisticsViewModel statisticsViewModel, EndpointsViewModel endpointsViewModel)
         {
-            Get["/heartbeats/stats"] = _ => Negotiate.WithModel(monitoring.GetStats());
+            Get["/heartbeats/stats"] = _ => Negotiate.WithModel(statisticsViewModel.GetStats());
 
-            Get["/endpoints"] = _ => Negotiate.WithModel(monitoring.GetEndpoints());
+            Get["/endpoints"] = _ => Negotiate.WithModel(endpointsViewModel.GetEndpoints());
 
             Patch["/endpoints/{id}", true] = async (parameters, token) =>
             {

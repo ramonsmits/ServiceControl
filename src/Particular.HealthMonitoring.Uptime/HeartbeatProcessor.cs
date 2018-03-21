@@ -1,28 +1,23 @@
 ﻿namespace Particular.HealthMonitoring.Uptime
 {
     using System.Threading.Tasks;
-    using Particular.HealthMonitoring.Uptime.Api;
     using Particular.Operations.Heartbeats.Api;
-    using ServiceControl.Infrastructure.DomainEvents;
 
     class HeartbeatProcessor : IProcessHeartbeats
     {
-        IDomainEvents domainEvents;
         EndpointInstanceMonitoring monitoring;
-        IPersistEndpointUptimeInformation persister;
+        EventInfrastructure eventInfrastructure;
 
-        public HeartbeatProcessor(EndpointInstanceMonitoring monitoring, IDomainEvents domainEvents, IPersistEndpointUptimeInformation persister)
+        public HeartbeatProcessor(EndpointInstanceMonitoring monitoring, EventInfrastructure eventInfrastructure)
         {
-            this.domainEvents = domainEvents;
-            this.persister = persister;
             this.monitoring = monitoring;
+            this.eventInfrastructure = eventInfrastructure;
         }
 
         public Task Handle(RegisterEndpointStartup endpointStartup)
         {
             var @event = monitoring.StartTrackingEndpoint(endpointStartup.Endpoint, endpointStartup.Host, endpointStartup.HostId);
-            domainEvents.Raise(@event);
-            return persister.Store(new[] { @event });
+            return eventInfrastructure.Publish(@event);
         }
 
         public Task Handle(EndpointHeartbeat heartbeat)

@@ -18,12 +18,14 @@ namespace Particular.HealthMonitoring.Uptime
 
         static readonly ILog log = LogManager.GetLogger<HeartbeatFailureDetector>();
         private IPersistEndpointUptimeInformation persister;
+        StatisticsViewModel viewModel;
         private IDomainEvents domainEvents;
 
-        public HeartbeatFailureDetector(EndpointInstanceMonitoring monitoring, IDomainEvents domainEvents, IPersistEndpointUptimeInformation persister)
+        public HeartbeatFailureDetector(EndpointInstanceMonitoring monitoring, IDomainEvents domainEvents, IPersistEndpointUptimeInformation persister, StatisticsViewModel viewModel)
         {
             this.domainEvents = domainEvents;
             this.persister = persister;
+            this.viewModel = viewModel;
             gracePeriod = GetHeartbeatGracePeriod();
             this.monitoring = monitoring;
         }
@@ -59,6 +61,7 @@ namespace Particular.HealthMonitoring.Uptime
                 var enumerable = events as IDomainEvent[] ?? events.ToArray();
                 foreach (var domainEvent in enumerable)
                 {
+                    viewModel.Handle(domainEvent);
                     domainEvents.Raise(domainEvent);
                 }
 

@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="StatisticsViewModel.cs" />
     <Compile Include="EndpointUpdateModel.cs" />
     <Compile Include="DeterministicGuid.cs" />
     <Compile Include="EndpointDetectingProcessor.cs" />
@@ -52,6 +53,7 @@
     <Compile Include="EndpointMonitoringStats.cs" />
     <Compile Include="EndpointsView.cs" />
     <Compile Include="EndpointUptimeInformationPersister.cs" />
+    <Compile Include="EventHelper.cs" />
     <Compile Include="HeartbeatFailureDetector.cs" />
     <Compile Include="HeartbeatProcessor.cs" />
     <Compile Include="HeartbeatState.cs" />

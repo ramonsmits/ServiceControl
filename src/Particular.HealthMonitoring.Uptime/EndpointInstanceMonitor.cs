@@ -3,7 +3,6 @@ namespace Particular.HealthMonitoring.Uptime
     using System;
     using Particular.HealthMonitoring.Uptime.Api;
     using ServiceControl.Contracts.Operations;
-    using ServiceControl.Infrastructure.DomainEvents;
 
     class EndpointInstanceMonitor
     {
@@ -20,23 +19,11 @@ namespace Particular.HealthMonitoring.Uptime
 
         public bool TryApply(IHeartbeatEvent @event)
         {
-            return TryApply<MonitoringEnabledForEndpoint>(@event, Apply)
-                   || TryApply<MonitoringDisabledForEndpoint>(@event, Apply)
-                   || TryApply<HeartbeatingEndpointDetected>(@event, Apply)
-                   || TryApply<EndpointHeartbeatRestored>(@event, Apply)
-                   || TryApply<EndpointFailedToHeartbeat>(@event, Apply);
-        }
-
-        static bool TryApply<T>(IHeartbeatEvent @event, Func<T, IDomainEvent> applyFunc)
-            where T : class, IHeartbeatEvent
-        {
-            var typed = @event as T;
-            if (typed != null)
-            {
-                applyFunc(typed);
-                return true;
-            }
-            return false;
+            return @event.TryApply<MonitoringEnabledForEndpoint>(Apply)
+                   || @event.TryApply<MonitoringDisabledForEndpoint>(Apply)
+                   || @event.TryApply<HeartbeatingEndpointDetected>(Apply)
+                   || @event.TryApply<EndpointHeartbeatRestored>(Apply)
+                   || @event.TryApply<EndpointFailedToHeartbeat>(Apply);
         }
 
         public IHeartbeatEvent EnableMonitoring()

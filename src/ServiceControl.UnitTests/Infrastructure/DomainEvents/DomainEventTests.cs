@@ -1,5 +1,6 @@
 ﻿namespace ServiceControl.UnitTests.Infrastructure.DomainEvents
 {
+    using System.Linq;
     using Autofac;
     using NUnit.Framework;
     using ServiceControl.Infrastructure.DomainEvents;
@@ -27,6 +28,18 @@
             Assert.AreEqual(1, eventHandler1.WasCalled);
             Assert.AreEqual(1, eventHandler2.WasCalled);
             Assert.AreEqual(1, eventHandler3.WasCalled);
+        }
+
+        [Test]
+        public void AllDomainEventHandlersArePublic()
+        {
+            var allTypes = typeof(DomainEvents).Assembly.GetTypes();
+            var handlerTypes = allTypes.Where(t => t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDomainHandler<>))).ToArray();
+
+            foreach (var handlerType in handlerTypes)
+            {
+                Assert.True(handlerType.IsPublic, $"Expected {handlerType} to be public.");
+            }
         }
 
         public class DummyDomainEvent : IDomainEvent

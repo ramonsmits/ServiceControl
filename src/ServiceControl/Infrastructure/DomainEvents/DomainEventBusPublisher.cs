@@ -2,7 +2,7 @@ namespace ServiceControl.Infrastructure.DomainEvents
 {
     using NServiceBus;
 
-    class DomainEventBusPublisher : IDomainHandler<IDomainEvent>
+    public class DomainEventBusPublisher : IDomainHandler<IDomainEvent>
     {
         IBus bus;
 

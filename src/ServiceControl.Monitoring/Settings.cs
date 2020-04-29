@@ -82,7 +82,7 @@ namespace ServiceControl.Monitoring
             }
 
             var connectionStringSettings = ConfigurationManager.ConnectionStrings["NServiceBus/Transport"];
-            return connectionStringSettings?.ConnectionString;
+            return Environment.ExpandEnvironmentVariables(connectionStringSettings?.ConnectionString);
         }
 
         static Type LoadTransportCustomizationType(string configuredTransportCustomizationName)

@@ -207,7 +207,7 @@ namespace ServiceBus.Management.Infrastructure.Settings
             }
 
             var connectionStringSettings = ConfigurationManager.ConnectionStrings["NServiceBus/Transport"];
-            return connectionStringSettings?.ConnectionString;
+            return Environment.ExpandEnvironmentVariables(connectionStringSettings?.ConnectionString);
         }
 
         private string GetErrorQueue()

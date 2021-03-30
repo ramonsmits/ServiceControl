@@ -96,6 +96,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceControl.Config.Tests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceControl.LicenseManagement", "ServiceControl.LicenseManagement\ServiceControl.LicenseManagement.csproj", "{FD1B9998-4B0C-4109-A3BC-0748F829F852}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceControl.Transports.LoadTest", "ServiceControl.Transports.LoadTest\ServiceControl.Transports.LoadTest.csproj", "{EFE751F1-5524-4143-9BC1-31A8E055A50D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -254,6 +256,10 @@ Global
 		{FD1B9998-4B0C-4109-A3BC-0748F829F852}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD1B9998-4B0C-4109-A3BC-0748F829F852}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FD1B9998-4B0C-4109-A3BC-0748F829F852}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFE751F1-5524-4143-9BC1-31A8E055A50D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFE751F1-5524-4143-9BC1-31A8E055A50D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFE751F1-5524-4143-9BC1-31A8E055A50D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFE751F1-5524-4143-9BC1-31A8E055A50D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

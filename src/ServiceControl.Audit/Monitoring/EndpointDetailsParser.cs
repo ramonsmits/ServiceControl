@@ -2,8 +2,9 @@ namespace ServiceControl.Audit.Monitoring
 {
     using System;
     using System.Collections.Generic;
-    using Infrastructure;
+    //using Infrastructure;
     using NServiceBus;
+    using DictionaryExtensions = Infrastructure.DictionaryExtensions;
 
     class EndpointDetailsParser
     {

@@ -196,7 +196,8 @@ namespace ServiceControl.Recoverability
             string Originator { get; set; }
             string Classifier { get; set; }
             DateTime StartTime { get; set; }
-            Task<IAsyncEnumerator<StreamResult<FailedMessages_UniqueMessageIdAndTimeOfFailures.Result>>> GetDocuments(IAsyncDocumentSession session);
+            //Task<System.Collections.Generic.IAsyncEnumerator<StreamResult<FailedMessages_UniqueMessageIdAndTimeOfFailures.Result>>> GetDocuments(IAsyncDocumentSession session);
+            Task<Raven.Abstractions.Util.IAsyncEnumerator<StreamResult<FailedMessages_UniqueMessageIdAndTimeOfFailures.Result>>> GetDocuments(IAsyncDocumentSession session);
         }
 
         class IndexBasedBulkRetryRequest<TType, TIndex> : IBulkRetryRequest
@@ -219,7 +220,7 @@ namespace ServiceControl.Recoverability
             public string Classifier { get; set; }
             public DateTime StartTime { get; set; }
 
-            public Task<IAsyncEnumerator<StreamResult<FailedMessages_UniqueMessageIdAndTimeOfFailures.Result>>> GetDocuments(IAsyncDocumentSession session)
+            public Task<Raven.Abstractions.Util.IAsyncEnumerator<StreamResult<FailedMessages_UniqueMessageIdAndTimeOfFailures.Result>>> GetDocuments(IAsyncDocumentSession session)
             {
                 var query = session.Query<TType, TIndex>();
 

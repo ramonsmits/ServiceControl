@@ -3,10 +3,11 @@
     using System;
     using System.Collections.Generic;
     using Contracts.Operations;
-    using Infrastructure;
+    //using Infrastructure;
     using NServiceBus;
     using NServiceBus.Faults;
     using Recoverability;
+    using DictionaryExtensions = Infrastructure.DictionaryExtensions;
     using FailedMessage = MessageFailures.FailedMessage;
 
     class FailedMessageFactory

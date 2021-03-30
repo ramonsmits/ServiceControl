@@ -10,6 +10,7 @@
 
     <ItemGroup>
         <PackageReference Include="NServiceBus" Version="7.4.4" />
+        <PackageReference Include="App.Metrics.Reporting.Console" Version="4.*" />
     </ItemGroup>
     
 </Project>

@@ -2,8 +2,9 @@ namespace ServiceControl.Contracts.Operations
 {
     using System;
     using System.Collections.Generic;
-    using Infrastructure;
+    //using Infrastructure;
     using NServiceBus;
+    using DictionaryExtensions = Infrastructure.DictionaryExtensions;
 
     class EndpointDetailsParser
     {

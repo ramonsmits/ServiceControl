@@ -1,10 +1,9 @@
 ﻿namespace ServiceControl.Transports.LoadTest
 {
-    using System;
     using NServiceBus;
     using NServiceBus.Raw;
 
-    public class LoadTestTransportCustomization : TransportCustomization
+    public class TransportCustomization : Transports.TransportCustomization
     {
         public override void CustomizeSendOnlyEndpoint(EndpointConfiguration endpointConfiguration, TransportSettings transportSettings)
         {
@@ -49,14 +48,12 @@
         static void CustomizeEndpoint(EndpointConfiguration endpointConfig, TransportTransactionMode transportTransactionMode = TransportTransactionMode.None)
         {
             var transport = endpointConfig.UseTransport<LoadTestTransport>();
-            //transport.StorageDirectory(Environment.ExpandEnvironmentVariables(transportSettings.ConnectionString));
             transport.Transactions(transportTransactionMode);
         }
 
         static void CustomizeRawEndpoint(RawEndpointConfiguration endpointConfig, TransportTransactionMode transportTransactionMode = TransportTransactionMode.None)
         {
             var transport = endpointConfig.UseTransport<LoadTestTransport>();
-            //transport.StorageDirectory(Environment.ExpandEnvironmentVariables(transportSettings.ConnectionString));
             transport.Transactions(transportTransactionMode);
         }
     }

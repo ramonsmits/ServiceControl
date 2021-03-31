@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Threading;
+using System.Text;
 using System.Threading.Tasks;
 using App.Metrics;
 using App.Metrics.Meter;
@@ -10,9 +11,6 @@ using NServiceBus;
 
 class FakeMessageGenerator
 {
-    static readonly string Prefix = DateTime.UtcNow.ToString("s") + "/";
-    static int _count;
-
     const string Sentences = "ABCD EFGH IJKL MNOP QRST UVWX YZ01 2345 6789\n";
     const string Lines = "ABCD EFGH IJKL MNOP QRST UVWX YZ01 2345 6789";
     const string Types = "ABCDEFGHIJKLMNOPQRSTUVWXYZ.";
@@ -60,10 +58,11 @@ class FakeMessageGenerator
     const int ExceptionMessagesMax = 100;
     const int ExceptionTypesMax = 50;
 
+    static readonly byte[] RandomData = Encoding.ASCII.GetBytes(File.ReadAllText("original.txt"));
     static readonly List<string> RandomExceptionStackTraces = RandomStrings(ExceptionStackTracesMax, 1000, 8000, Sentences);
     static readonly List<string> RandomExceptionMessages = RandomStrings(ExceptionMessagesMax, 15, 50, Lines);
     static readonly List<string> RandomExceptionTypes = RandomStrings(ExceptionTypesMax, 15, 250, Types);
-    static readonly byte[] RandomData = StaticRandom.NextBytes(1024 * 1024);
+
 
     static List<string> RandomStrings(int count, int min, int max, string chars)
     {
@@ -77,12 +76,11 @@ class FakeMessageGenerator
         return items;
     }
 
-
     public static (string id, Dictionary<string, string> headers, byte[] body) Create(bool isError)
     {
         metrics.Measure.Meter.Mark(rate);
 
-        var id = Prefix + Interlocked.Increment(ref _count) + "/" + Guid.NewGuid().ToString("n");
+        var id = Guid.NewGuid().ToString();
 
         int length = StaticRandom.Next(BodySizeMax);
         var body = new byte[length];
@@ -95,10 +93,11 @@ class FakeMessageGenerator
         var headers = new Dictionary<string, string>
         {
             [Headers.MessageId] = id,
-            [Headers.ContentType] = "random",
+            [Headers.ContentType] = " text/plain",
+            //[Headers.ContentType] = " application/octet-stream",
             [Headers.EnclosedMessageTypes] = "random_" + StaticRandom.Next(EnclosedMessageTypesMax),
-            [Headers.CorrelationId] = now.ToString("yyyy-M-d hh") + " " + StaticRandom.Next(CorrelationIdMax),
-            [Headers.ConversationId] = now.ToString("yyyy-M-d hh") + " " + StaticRandom.Next(ConversationIdMax),
+            [Headers.CorrelationId] = now.ToString("yyyy-M-dThh") + "_" + StaticRandom.Next(CorrelationIdMax),
+            [Headers.ConversationId] = now.ToString("yyyy-M-dThh") + "_" + StaticRandom.Next(ConversationIdMax),
             //[Headers.RelatedTo] = "random",
             [Headers.MessageIntent] = intents[StaticRandom.Next(3)],
             [Headers.TimeSent] = DateTimeExtensions.ToWireFormattedString(now),

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Threading.Tasks;
 using NServiceBus;
@@ -11,7 +12,7 @@ using NServiceBus.Transport;
 
 class Options
 {
-    public int Rate { get; set; } = 1000;
+    public int Rate { get; set; } = int.Parse(ConfigurationManager.AppSettings["RateLimit"]);
 }
 
 public class LoadTestTransport :

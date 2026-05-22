@@ -266,6 +266,37 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
         }
 
         // -----------------------------------------------------------------------
+        // POST api/edit/{id} — resource-scope check: scoped user denied edit of
+        // out-of-scope message (Fix 3)
+        // -----------------------------------------------------------------------
+
+        [Test]
+        public async Task Edit_scoped_operator_out_of_scope_receives_403()
+        {
+            var messageId = Guid.NewGuid().ToString("N");
+            HttpResponseMessage response = null;
+            using var scopedConfig = new ScopedRbacConfiguration();
+
+            _ = await Define<Context>()
+                .Done(async ctx =>
+                {
+                    await StoreFailedMessage(messageId, FinanceQueueAddress);
+
+                    var token = mockOidcServer.GenerateTokenWithRealmRoles("sales-editor-oos", ["sales-editor"]);
+                    // POST with empty body — we expect 403 before body validation runs
+                    using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/edit/{messageId}");
+                    request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    request.Content = new StringContent("{\"messageBody\":\"\",\"messageHeaders\":{}}", System.Text.Encoding.UTF8, "application/json");
+                    response = await HttpClient.SendAsync(request);
+                    return response != null;
+                })
+                .Run();
+
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden),
+                "Sales-scoped editor must receive 403 when editing a Finance-queue message");
+        }
+
+        // -----------------------------------------------------------------------
         // GET api/errors/summary (messages:view)
         // -----------------------------------------------------------------------
 
@@ -417,6 +448,13 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
                         bindings: [ "role:sales-viewer" ]
                         permissions:
                           - permission: "messages:view"
+                            scope: { allow: ["Sales.*"] }
+                      sales-editor:
+                        bindings: [ "role:sales-editor" ]
+                        permissions:
+                          - permission: "messages:view"
+                            scope: { allow: ["Sales.*"] }
+                          - permission: "messages:edit"
                             scope: { allow: ["Sales.*"] }
                     """;
 

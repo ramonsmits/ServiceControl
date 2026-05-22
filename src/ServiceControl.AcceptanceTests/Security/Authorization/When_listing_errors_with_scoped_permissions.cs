@@ -100,6 +100,50 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
         }
 
         // -----------------------------------------------------------------------
+        // R1: paging totals must reflect only in-scope messages (Fix 1 correctness)
+        // -----------------------------------------------------------------------
+
+        [Test]
+        public async Task Scoped_viewer_paging_total_count_reflects_only_in_scope_messages()
+        {
+            // Critical regression test for Fix 1: the scope filter must be applied BEFORE
+            // .Paging()/.Statistics() so that Total-Count / total headers reflect only messages
+            // the caller is allowed to see — not the full DB count minus filtered rows.
+            var salesId = Guid.NewGuid().ToString("N");
+            var financeId = Guid.NewGuid().ToString("N");
+            HttpResponseMessage response = null;
+
+            using var scopedConfig = new ScopedViewerRbacConfiguration();
+
+            _ = await Define<Context>()
+                .Done(async ctx =>
+                {
+                    await StoreFailedMessage(salesId, SalesQueueAddress);
+                    await StoreFailedMessage(financeId, FinanceQueueAddress);
+
+                    var token = mockOidcServer.GenerateTokenWithRealmRoles("sales-viewer-paging", ["sales-viewer"]);
+                    response = await OpenIdConnectAssertions.SendRequestWithBearerToken(
+                        HttpClient, HttpMethod.Get, "/api/errors?page=1&per_page=50", token);
+
+                    Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                    return true;
+                })
+                .Run();
+
+            // Total-Count must be 1 (only the Sales message), not 2 (both messages minus filter).
+            // Before Fix 1, paging was applied AFTER scope filter so the header showed count=2
+            // but the body had 1 row, causing the client to believe there was a second page.
+            var totalCount = response.Headers.TryGetValues("Total-Count", out var values)
+                ? values.FirstOrDefault()
+                : null;
+
+            Assert.That(totalCount, Is.Not.Null, "Total-Count header must be present");
+            Assert.That(int.Parse(totalCount!), Is.EqualTo(1),
+                "Total-Count must equal the number of in-scope messages (1), not the total DB count (2). " +
+                "Failure here means the scope filter is applied post-paging, not pre-paging.");
+        }
+
+        // -----------------------------------------------------------------------
         // R1: scoped viewer sees only in-scope messages
         // -----------------------------------------------------------------------
 
@@ -138,6 +182,113 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
                 "Scoped viewer should see the in-scope Sales message");
             Assert.That(ids.Any(id => id?.Contains(financeId) == true), Is.False,
                 "Scoped viewer must NOT see the out-of-scope Finance message");
+        }
+
+        // -----------------------------------------------------------------------
+        // R1: scoped viewer on ErrorsByEndpointName sees only in-scope messages
+        // -----------------------------------------------------------------------
+
+        [Test]
+        public async Task Scoped_viewer_errors_by_endpoint_sees_only_in_scope_messages()
+        {
+            var salesId = Guid.NewGuid().ToString("N");
+            var financeId = Guid.NewGuid().ToString("N");
+            string salesBody = null;
+            string financeBody = null;
+
+            using var scopedConfig = new ScopedViewerRbacConfiguration();
+
+            _ = await Define<Context>()
+                .Done(async ctx =>
+                {
+                    await StoreFailedMessage(salesId, SalesQueueAddress);
+                    await StoreFailedMessage(financeId, FinanceQueueAddress);
+
+                    var token = mockOidcServer.GenerateTokenWithRealmRoles("sales-viewer-ep", ["sales-viewer"]);
+
+                    // Sales endpoint — has messages in scope for sales-viewer
+                    var salesResponse = await OpenIdConnectAssertions.SendRequestWithBearerToken(
+                        HttpClient, HttpMethod.Get, "/api/endpoints/Sales.OrderHandler/errors", token);
+                    Assert.That(salesResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                    salesBody = await salesResponse.Content.ReadAsStringAsync();
+
+                    // Finance endpoint — has messages out of scope for sales-viewer
+                    var financeResponse = await OpenIdConnectAssertions.SendRequestWithBearerToken(
+                        HttpClient, HttpMethod.Get, "/api/endpoints/Finance.Payments/errors", token);
+                    Assert.That(financeResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                    financeBody = await financeResponse.Content.ReadAsStringAsync();
+
+                    return true;
+                })
+                .Run();
+
+            using var salesDoc = JsonDocument.Parse(salesBody!);
+            var salesIds = salesDoc.RootElement.EnumerateArray()
+                .Select(e => e.TryGetProperty("id", out var idProp) ? idProp.GetString() : null)
+                .ToList();
+
+            Assert.That(salesIds, Has.Some.Contains(salesId),
+                "Scoped viewer should see the in-scope Sales message when querying Sales endpoint");
+
+            using var financeDoc = JsonDocument.Parse(financeBody!);
+            var financeIds = financeDoc.RootElement.EnumerateArray()
+                .Select(e => e.TryGetProperty("id", out var idProp) ? idProp.GetString() : null)
+                .ToList();
+
+            Assert.That(financeIds.Any(id => id?.Contains(financeId) == true), Is.False,
+                "Scoped viewer must NOT see out-of-scope Finance message when querying Finance endpoint");
+        }
+
+        // -----------------------------------------------------------------------
+        // R1: ErrorLastBy returns 403 for out-of-scope message
+        // -----------------------------------------------------------------------
+
+        [Test]
+        public async Task GetErrorLastBy_scoped_viewer_out_of_scope_receives_403()
+        {
+            var messageId = Guid.NewGuid().ToString("N");
+            HttpResponseMessage response = null;
+
+            using var scopedConfig = new ScopedViewerRbacConfiguration();
+
+            _ = await Define<Context>()
+                .Done(async ctx =>
+                {
+                    await StoreFailedMessage(messageId, FinanceQueueAddress);
+
+                    var token = mockOidcServer.GenerateTokenWithRealmRoles("sales-viewer-last", ["sales-viewer"]);
+                    response = await OpenIdConnectAssertions.SendRequestWithBearerToken(
+                        HttpClient, HttpMethod.Get, $"/api/errors/last/{messageId}", token);
+                    return response != null;
+                })
+                .Run();
+
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden),
+                "Scoped viewer should receive 403 for GetErrorLastBy on out-of-scope message");
+        }
+
+        [Test]
+        public async Task GetErrorLastBy_scoped_viewer_in_scope_receives_200()
+        {
+            var messageId = Guid.NewGuid().ToString("N");
+            HttpResponseMessage response = null;
+
+            using var scopedConfig = new ScopedViewerRbacConfiguration();
+
+            _ = await Define<Context>()
+                .Done(async ctx =>
+                {
+                    await StoreFailedMessage(messageId, SalesQueueAddress);
+
+                    var token = mockOidcServer.GenerateTokenWithRealmRoles("sales-viewer-last-ok", ["sales-viewer"]);
+                    response = await OpenIdConnectAssertions.SendRequestWithBearerToken(
+                        HttpClient, HttpMethod.Get, $"/api/errors/last/{messageId}", token);
+                    return response != null;
+                })
+                .Run();
+
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK),
+                "Scoped viewer should receive 200 for GetErrorLastBy on in-scope message");
         }
 
         // -----------------------------------------------------------------------

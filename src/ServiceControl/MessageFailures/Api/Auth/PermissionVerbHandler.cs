@@ -4,6 +4,7 @@ namespace ServiceControl.MessageFailures.Api.Auth;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using ServiceControl.Infrastructure.Auth.Rbac;
+using ServiceControl.MessageFailures;
 
 /// <summary>
 /// S3 verb-level authorization handler for <see cref="PermissionRequirement"/>.
@@ -26,10 +27,10 @@ public sealed class PermissionVerbHandler(
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
-        // When a typed resource is present, the resource-based handler (e.g.,
-        // FailedMessageAuthorizationHandler) owns the decision — including the verb check.
-        // Skip here to avoid double logging and double evaluation.
-        if (context.Resource != null)
+        // When the resource is a FailedMessage (the explicit resource-scope check),
+        // the FailedMessageAuthorizationHandler owns the entire decision — including
+        // the verb-level HasPermission check. Skip here to avoid double logging.
+        if (context.Resource is FailedMessage)
         {
             return Task.CompletedTask;
         }

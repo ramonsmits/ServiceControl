@@ -124,7 +124,9 @@ namespace ServiceControl.AcceptanceTests.Security.OpenIdConnect
             _ = await Define<Context>()
                 .Done(async ctx =>
                 {
-                    var validToken = mockOidcServer.GenerateToken();
+                    // Use sc-viewer role so the request is both authenticated and authorized.
+                    // GET /api/errors now requires messages:view (RBAC), which sc-viewer grants.
+                    var validToken = mockOidcServer.GenerateTokenWithRealmRoles("test-user", ["sc-viewer"]);
                     response = await OpenIdConnectAssertions.SendRequestWithBearerToken(
                         HttpClient,
                         HttpMethod.Get,

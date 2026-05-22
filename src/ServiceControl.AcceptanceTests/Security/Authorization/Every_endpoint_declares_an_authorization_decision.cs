@@ -56,7 +56,6 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
             "GET api/endpoints",
             "GET api/endpoints/{id}",
             "GET api/endpoints/known",
-            "GET api/endpoints/{endpointname}/errors",
             "GET api/heartbeatstatus",
             "GET api/heartbeats/stats",
             "PATCH api/endpoints/{endpointId}",

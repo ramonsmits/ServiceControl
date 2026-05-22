@@ -387,7 +387,7 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
         // -----------------------------------------------------------------------
 
         [Test]
-        public async Task EditComment_viewer_receives_403()
+        public async Task EditComment_viewer_with_view_permission_receives_accepted()
         {
             HttpResponseMessage response = null;
             _ = await Define<Context>()

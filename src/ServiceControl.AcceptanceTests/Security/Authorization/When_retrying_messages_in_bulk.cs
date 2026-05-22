@@ -275,7 +275,7 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
 
         Task<HttpResponseMessage> SendRequest(string token, HttpMethod method, string path, string jsonBody = null)
         {
-            using var request = new HttpRequestMessage(method, path);
+            var request = new HttpRequestMessage(method, path);
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             if (jsonBody != null)
             {

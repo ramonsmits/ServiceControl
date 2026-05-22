@@ -24,7 +24,8 @@ namespace ServiceControl.Recoverability
                     MessageType = (string)processingAttemptsLast.MessageMetadata["MessageType"],
                     TimeSent = (DateTime)processingAttemptsLast.MessageMetadata["TimeSent"],
                     TimeOfFailure = processingAttemptsLast.FailureDetails.TimeOfFailure,
-                    LastModified = MetadataFor(doc).Value<DateTime>("@last-modified").Ticks
+                    LastModified = MetadataFor(doc).Value<DateTime>("@last-modified").Ticks,
+                    QueueAddress = processingAttemptsLast.FailureDetails.AddressOfFailingEndpoint
                 };
 
             StoreAllFields(FieldStorage.Yes);

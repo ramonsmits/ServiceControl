@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Linq;
+    using System.Security.Claims;
     using System.Threading.Tasks;
     using Infrastructure.WebApi;
     using MessageFailures.Api;
@@ -18,7 +19,8 @@
         IEnumerable<IFailureClassifier> classifiers,
         GroupFetcher fetcher,
         IErrorMessageDataStore store,
-        IRetryHistoryDataStore retryStore)
+        IRetryHistoryDataStore retryStore,
+        IPermissionEvaluator permissionEvaluator)
         : ControllerBase
     {
         [RequirePermission(Permissions.RecoverabilityGroupsView)]
@@ -81,7 +83,11 @@
         [HttpGet]
         public async Task<IList<FailedMessageView>> GetGroupErrors(string groupId, [FromQuery] SortInfo sortInfo, [FromQuery] PagingInfo pagingInfo, string status = default, string modified = default)
         {
-            var results = await store.GetGroupErrors(groupId, status, modified, sortInfo, pagingInfo);
+            // R1: resolve the caller's permitted queue scope and push it into the query, before
+            // paging, so that Total-Count and page sizes reflect only messages in scope.
+            var queueScope = permissionEvaluator.ResolveQueueScope(User, Permissions.RecoverabilityGroupsView);
+
+            var results = await store.GetGroupErrors(groupId, status, modified, sortInfo, pagingInfo, queueScope);
 
             Response.WithQueryStatsAndPagingInfo(results.QueryStats, pagingInfo);
             return results.Results;

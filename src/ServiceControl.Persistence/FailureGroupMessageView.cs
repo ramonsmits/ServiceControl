@@ -14,5 +14,6 @@ namespace ServiceControl.Recoverability
         public DateTime TimeOfFailure { get; set; }
         public long LastModified { get; set; }
         public FailedMessageStatus Status { get; set; }
+        public string QueueAddress { get; set; }
     }
 }

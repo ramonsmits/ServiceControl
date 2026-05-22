@@ -59,6 +59,11 @@ namespace ServiceControl.MessageFailures.Api
         [HttpPatch]
         public async Task<IActionResult> Archive(string messageId)
         {
+            // NOTE: No resource-scope check here. The archive operation is fire-and-forget via
+            // SendLocal — the message is enqueued without loading the FailedMessage first, so
+            // there is no queue address available to scope-check at this point. A data-layer
+            // enforcement (loading before enqueue) would be a breaking change to the handler chain.
+            // Deferred to a future phase; document here so the gap is explicit and not silent.
             await messageSession.SendLocal<ArchiveMessage>(m => m.FailedMessageId = messageId);
 
             return Accepted();

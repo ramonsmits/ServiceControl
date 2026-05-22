@@ -13,7 +13,8 @@
     [Route("api")]
     public class GetErrorByIdController(
         IErrorMessageDataStore store,
-        IAuthorizationService authorizationService) : ControllerBase
+        IAuthorizationService authorizationService,
+        IPermissionEvaluator permissionEvaluator) : ControllerBase
     {
         [RequirePermission(Permissions.MessagesView)]
         [Authorize(Policy = Permissions.MessagesView)]
@@ -40,17 +41,7 @@
                     ? result.ProcessingAttempts[^1].FailureDetails?.AddressOfFailingEndpoint
                     : null;
 
-                Response.ContentType = "application/json";
-                Response.StatusCode = StatusCodes.Status403Forbidden;
-                await Response.WriteAsJsonAsync(new
-                {
-                    error = "forbidden",
-                    permission = Permissions.MessagesView,
-                    resource = queueAddress,
-                    reason = string.IsNullOrEmpty(queueAddress)
-                        ? "Message has no resolvable queue address"
-                        : $"Queue '{queueAddress}' is out of scope for permission '{Permissions.MessagesView}'"
-                });
+                await AuthorizationHelpers.WriteScopeDenied403(Response, Permissions.MessagesView, queueAddress);
                 return Empty;
             }
 
@@ -65,7 +56,21 @@
         {
             var result = await store.ErrorLastBy(failedMessageId);
 
-            return result == null ? NotFound() : result;
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            // Resource-scope check: consistent with ErrorBy — a scoped user must not view
+            // a message whose queue is outside their scope.
+            if (!AuthorizationHelpers.HasUnrestrictedGrant(permissionEvaluator, User, Permissions.MessagesView)
+                && !permissionEvaluator.IsInScope(User, Permissions.MessagesView, result.QueueAddress ?? string.Empty))
+            {
+                await AuthorizationHelpers.WriteScopeDenied403(Response, Permissions.MessagesView, result.QueueAddress);
+                return Empty;
+            }
+
+            return result;
         }
     }
 }

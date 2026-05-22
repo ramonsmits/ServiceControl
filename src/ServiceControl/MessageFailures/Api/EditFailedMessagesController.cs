@@ -6,6 +6,7 @@
     using System.Text;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Authorization;
+    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Logging;
     using NServiceBus;
@@ -22,6 +23,7 @@
         Settings settings,
         IErrorMessageDataStore store,
         IMessageSession session,
+        IAuthorizationService authorizationService,
         ILogger<EditFailedMessagesController> logger)
         : ControllerBase
     {
@@ -59,6 +61,21 @@
             {
                 logger.LogWarning("The original failed message could not be loaded for id={FailedMessageId}", failedMessageId);
                 return BadRequest();
+            }
+
+            // Resource-scope check: a scoped operator must not edit a message from a queue
+            // outside their scope (e.g. a Sales-scoped operator must not edit Finance messages).
+            var scopeResult = await authorizationService.AuthorizeAsync(
+                User,
+                failedMessage,
+                new PermissionRequirement(Permissions.MessagesEdit));
+
+            if (!scopeResult.Succeeded)
+            {
+                var queueAddress = failedMessage.ProcessingAttempts.LastOrDefault()
+                    ?.FailureDetails?.AddressOfFailingEndpoint;
+                await AuthorizationHelpers.WriteScopeDenied403(Response, Permissions.MessagesEdit, queueAddress);
+                return Empty;
             }
 
             //WARN

@@ -7,6 +7,7 @@ namespace ServiceControl.Persistence
     using System.Linq.Expressions;
     using Raven.Client.Documents.Linq;
     using Raven.Client.Documents.Session;
+    using ServiceControl.Infrastructure.Auth.Rbac;
     using ServiceControl.MessageFailures;
     using ServiceControl.Persistence.Infrastructure;
 
@@ -203,6 +204,104 @@ namespace ServiceControl.Persistence
 
             source.AndAlso();
             source.WhereEquals("QueueAddress", queueAddress.ToLowerInvariant());
+
+            return source;
+        }
+
+        /// <summary>
+        /// Restricts the query to messages whose queue address is permitted by the supplied scope.
+        /// Applied before <c>.Paging()</c> and <c>.Statistics()</c> so that totals and page
+        /// sizes reflect only messages the caller is allowed to see.
+        /// <para>
+        /// <b>Null scope</b> (unrestricted user) → no filter applied; all messages visible.
+        /// </para>
+        /// <para>
+        /// <b>Non-null scope</b> → builds an OR-group of Lucene clauses for each allow pattern
+        /// and then AND-NOT conditions for each deny pattern. Pattern semantics mirror
+        /// <see cref="ResourceScope"/>:
+        /// <list type="bullet">
+        ///   <item><c>*</c>  → unrestricted (treated same as null scope)</item>
+        ///   <item><c>Prefix.*</c>  → starts-with prefix (Lucene wildcard)</item>
+        ///   <item><c>exact</c> → exact equals</item>
+        /// </list>
+        /// Deny wins: if the address matches a deny pattern it is excluded even if also allowed.
+        /// </para>
+        /// <para>
+        /// Queue addresses are stored in lower-case in the index; all patterns are lowercased
+        /// before comparison.
+        /// </para>
+        /// </summary>
+        public static IAsyncDocumentQuery<T> FilterByQueueScope<T>(this IAsyncDocumentQuery<T> source, ResourceScope? scope)
+        {
+            // Null scope = unrestricted user — no filter.
+            if (scope == null)
+            {
+                return source;
+            }
+
+            // A wildcard allow pattern means unrestricted — no filter.
+            if (scope.Allow.Any(p => p == "*"))
+            {
+                return source;
+            }
+
+            // Empty allow list → deny everything.
+            if (scope.Allow.Count == 0)
+            {
+                source.AndAlso();
+                // WhereEquals on a non-existent value is the cleanest way to produce zero rows.
+                source.WhereEquals("QueueAddress", "__no-match__");
+                return source;
+            }
+
+            // Build the allow OR-group.
+            source.AndAlso();
+            source.OpenSubclause();
+
+            var first = true;
+            foreach (var pattern in scope.Allow)
+            {
+                if (!first)
+                {
+                    source.OrElse();
+                }
+
+                first = false;
+
+                var lower = pattern.ToLowerInvariant();
+
+                if (lower.EndsWith(".*", StringComparison.Ordinal))
+                {
+                    // Prefix wildcard: "Prefix.*" → Lucene query "Prefix.*"
+                    // The Lucene suffix wildcard matches everything after the dot.
+                    source.WhereLucene("QueueAddress", lower);
+                }
+                else
+                {
+                    // Exact match.
+                    source.WhereEquals("QueueAddress", lower);
+                }
+            }
+
+            source.CloseSubclause();
+
+            // Apply deny patterns (AND NOT for each). Deny wins over allow.
+            foreach (var denyPattern in scope.Deny)
+            {
+                var lower = denyPattern.ToLowerInvariant();
+
+                if (lower.EndsWith(".*", StringComparison.Ordinal))
+                {
+                    // Prefix deny: AND NOT (QueueAddress STARTS WITH prefix).
+                    source.AndAlso().Not.WhereLucene("QueueAddress", lower);
+                }
+                else
+                {
+                    // Exact deny.
+                    source.AndAlso();
+                    source.WhereNotEquals("QueueAddress", lower);
+                }
+            }
 
             return source;
         }

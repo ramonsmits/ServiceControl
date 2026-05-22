@@ -7,7 +7,6 @@
     using Microsoft.AspNetCore.Mvc;
     using Persistence.Infrastructure;
     using ServiceControl.Infrastructure.Auth.Rbac;
-    using ServiceControl.Infrastructure.WebApi.Auth;
     using ServiceControl.Persistence;
 
     [ApiController]
@@ -22,18 +21,23 @@
         [HttpGet]
         public async Task<IList<FailedMessageView>> ErrorsGet([FromQuery] PagingInfo pagingInfo, [FromQuery] SortInfo sortInfo, string status, string modified, string queueAddress)
         {
+            // R1: resolve the caller's permitted queue scope and push it into the query, before
+            // paging, so that Total-Count and page sizes reflect only messages in scope.
+            // Null means unrestricted (admin / no scoped grants).
+            var queueScope = permissionEvaluator.ResolveQueueScope(User, Permissions.MessagesView);
+
             var results = await store.ErrorGet(
                     status: status,
                     modified: modified,
                     queueAddress: queueAddress,
                     pagingInfo,
-                    sortInfo
+                    sortInfo,
+                    queueScope
                     );
 
             Response.WithQueryStatsAndPagingInfo(results.QueryStats, pagingInfo);
 
-            // R1: filter results to those in scope for the requesting user.
-            return results.Results.FilterByPermittedQueues(User, Permissions.MessagesView, permissionEvaluator);
+            return results.Results;
         }
 
         [RequirePermission(Permissions.MessagesView)]
@@ -57,18 +61,22 @@
         [HttpGet]
         public async Task<IList<FailedMessageView>> ErrorsByEndpointName([FromQuery] PagingInfo pagingInfo, [FromQuery] SortInfo sortInfo, string status, string modified, string endpointName)
         {
+            // R1: resolve the caller's permitted queue scope and push it into the query, before
+            // paging, so that Total-Count and page sizes reflect only messages in scope.
+            var queueScope = permissionEvaluator.ResolveQueueScope(User, Permissions.MessagesView);
+
             var results = await store.ErrorsByEndpointName(
                 status: status,
                 endpointName: endpointName,
                 modified: modified,
                 pagingInfo,
-                sortInfo
+                sortInfo,
+                queueScope
                 );
 
             Response.WithQueryStatsAndPagingInfo(results.QueryStats, pagingInfo);
 
-            // R1: filter results to those in scope for the requesting user.
-            return results.Results.FilterByPermittedQueues(User, Permissions.MessagesView, permissionEvaluator);
+            return results.Results;
         }
 
         [RequirePermission(Permissions.MessagesView)]

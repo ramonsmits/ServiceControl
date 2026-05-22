@@ -17,6 +17,7 @@
     using Persistence;
     using Persistence.Infrastructure;
     using ServiceControl.CompositeViews.Messages;
+    using ServiceControl.Infrastructure.Auth.Rbac;
     using ServiceControl.Operations;
     using ServiceControl.Recoverability;
 
@@ -201,12 +202,12 @@
 
             public Task<IList<FailureGroupView>> GetFailureGroupsByClassifier(string classifier) => throw new NotImplementedException();
 
-            public Task<QueryResult<IList<FailedMessageView>>> ErrorGet(string status, string modified, string queueAddress, PagingInfo pagingInfo, SortInfo sortInfo) => throw new NotImplementedException();
+            public Task<QueryResult<IList<FailedMessageView>>> ErrorGet(string status, string modified, string queueAddress, PagingInfo pagingInfo, SortInfo sortInfo, ResourceScope? queueScope = null) => throw new NotImplementedException();
 
             public Task<QueryStatsInfo> ErrorsHead(string status, string modified, string queueAddress) => throw new NotImplementedException();
 
             public Task<QueryResult<IList<FailedMessageView>>> ErrorsByEndpointName(string status, string endpointName, string modified, PagingInfo pagingInfo,
-                SortInfo sortInfo) =>
+                SortInfo sortInfo, ResourceScope? queueScope = null) =>
                 throw new NotImplementedException();
 
             public Task<IDictionary<string, object>> ErrorsSummary() => throw new NotImplementedException();
@@ -221,7 +222,7 @@
 
             public Task DeleteComment(string groupId) => throw new NotImplementedException();
 
-            public Task<QueryResult<IList<FailedMessageView>>> GetGroupErrors(string groupId, string status, string modified, SortInfo sortInfo, PagingInfo pagingInfo) => throw new NotImplementedException();
+            public Task<QueryResult<IList<FailedMessageView>>> GetGroupErrors(string groupId, string status, string modified, SortInfo sortInfo, PagingInfo pagingInfo, ResourceScope? queueScope = null) => throw new NotImplementedException();
 
             public Task<QueryStatsInfo> GetGroupErrorsCount(string groupId, string status, string modified) => throw new NotImplementedException();
 

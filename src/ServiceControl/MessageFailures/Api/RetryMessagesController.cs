@@ -65,17 +65,7 @@ namespace ServiceControl.MessageFailures.Api
                         ?.FailureDetails
                         ?.AddressOfFailingEndpoint;
 
-                    Response.ContentType = "application/json";
-                    Response.StatusCode = StatusCodes.Status403Forbidden;
-                    await Response.WriteAsJsonAsync(new
-                    {
-                        error = "forbidden",
-                        permission = Permissions.MessagesRetry,
-                        resource = queueAddress,
-                        reason = string.IsNullOrEmpty(queueAddress)
-                            ? "Message has no resolvable queue address"
-                            : $"Queue '{queueAddress}' is out of scope for permission '{Permissions.MessagesRetry}'"
-                    });
+                    await AuthorizationHelpers.WriteScopeDenied403(Response, Permissions.MessagesRetry, queueAddress);
                     return Empty;
                 }
 

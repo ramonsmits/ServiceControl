@@ -17,6 +17,7 @@
     using Raven.Client.Documents.Session;
     using ServiceControl.CompositeViews.Messages;
     using ServiceControl.EventLog;
+    using ServiceControl.Infrastructure.Auth.Rbac;
     using ServiceControl.MessageFailures;
     using ServiceControl.MessageFailures.Api;
     using ServiceControl.Operations;
@@ -215,7 +216,8 @@
             string modified,
             string queueAddress,
             PagingInfo pagingInfo,
-            SortInfo sortInfo
+            SortInfo sortInfo,
+            ResourceScope? queueScope = null
             )
         {
             using var session = await sessionProvider.OpenSession();
@@ -225,6 +227,7 @@
                 .FilterByStatusWhere(status)
                 .FilterByLastModifiedRange(modified)
                 .FilterByQueueAddress(queueAddress)
+                .FilterByQueueScope(queueScope)
                 .Sort(sortInfo)
                 .Paging(pagingInfo)
                 .SelectFields<FailedMessage>()
@@ -259,7 +262,8 @@
             string endpointName,
             string modified,
             PagingInfo pagingInfo,
-            SortInfo sortInfo
+            SortInfo sortInfo,
+            ResourceScope? queueScope = null
             )
         {
             using var session = await sessionProvider.OpenSession();
@@ -270,6 +274,7 @@
                 .AndAlso()
                 .WhereEquals("ReceivingEndpointName", endpointName)
                 .FilterByLastModifiedRange(modified)
+                .FilterByQueueScope(queueScope)
                 .Sort(sortInfo)
                 .Paging(pagingInfo)
                 .SelectFields<FailedMessage>()
@@ -413,7 +418,8 @@
             string status,
             string modified,
             SortInfo sortInfo,
-            PagingInfo pagingInfo
+            PagingInfo pagingInfo,
+            ResourceScope? queueScope = null
             )
         {
             using var session = await sessionProvider.OpenSession();
@@ -423,6 +429,7 @@
                 .WhereEquals(view => view.FailureGroupId, groupId)
                 .FilterByStatusWhere(status)
                 .FilterByLastModifiedRange(modified)
+                .FilterByQueueScope(queueScope)
                 .Sort(sortInfo)
                 .Paging(pagingInfo)
                 .SelectFields<FailedMessage>()

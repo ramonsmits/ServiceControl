@@ -1,7 +1,6 @@
 #nullable enable
 namespace ServiceControl.Infrastructure.WebApi.Auth;
 
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using ServiceControl.Infrastructure.Auth.Rbac;
@@ -40,16 +39,10 @@ public sealed class FailureGroupAuthorizationHandler(
         var permission = requirement.Permission;
         var groupId = resource.Id ?? "(unknown-group)";
 
-        // Resolve the user's effective permissions to determine whether any grant
-        // for this permission is unrestricted (null scope or unrestricted scope).
-        var effective = permissionEvaluator.Resolve(context.User);
-
-        var hasUnrestrictedGrant = effective.Grants
-            .Any(g =>
-                // Wildcard permission satisfies everything
-                (g.Permission == "*" || g.Permission == permission)
-                // No scope restriction → unrestricted
-                && g.Scope == null);
+        // Check whether the user holds at least one unrestricted grant for this permission,
+        // using the shared IPermissionEvaluator.HasUnrestrictedGrant method so the logic
+        // is not duplicated across handlers.
+        var hasUnrestrictedGrant = permissionEvaluator.HasUnrestrictedGrant(context.User, permission);
 
         if (hasUnrestrictedGrant)
         {

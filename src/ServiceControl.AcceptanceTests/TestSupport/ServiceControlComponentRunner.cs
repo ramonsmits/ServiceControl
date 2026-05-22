@@ -27,7 +27,7 @@
     using RavenDB.Shared;
     using ServiceBus.Management.Infrastructure.Settings;
     using ServiceControl.Infrastructure;
-    using ServiceControl.MessageFailures.Api.Auth;
+    using ServiceControl.Infrastructure.WebApi.Auth;
 
     public class ServiceControlComponentRunner : ComponentRunner, IAcceptanceTestInfrastructureProvider
     {

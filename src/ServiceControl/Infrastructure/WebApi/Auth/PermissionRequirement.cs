@@ -1,5 +1,5 @@
 #nullable enable
-namespace ServiceControl.MessageFailures.Api.Auth;
+namespace ServiceControl.Infrastructure.WebApi.Auth;
 
 using Microsoft.AspNetCore.Authorization;
 
@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 /// Two distinct checks use this requirement:
 /// <list type="bullet">
 ///   <item>Verb gate (pre-load): does the user hold <see cref="Permission"/> at all?</item>
-///   <item>Resource scope (post-load): is the specific <see cref="MessageFailures.FailedMessage"/> in scope?</item>
+///   <item>Resource scope (post-load): is the specific resource in scope for this user?</item>
 /// </list>
 /// </para>
 /// </summary>

@@ -1,5 +1,5 @@
 #nullable enable
-namespace ServiceControl.MessageFailures.Api.Auth;
+namespace ServiceControl.Infrastructure.WebApi.Auth;
 
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -8,45 +8,55 @@ using ServiceControl.Infrastructure.Auth.Rbac;
 
 /// <summary>
 /// A dynamic <see cref="IAuthorizationPolicyProvider"/> that generates verb-level
-/// authorization policies from permission strings (e.g. <c>messages:retry</c>).
+/// authorization policies from known permission strings (e.g. <c>messages:retry</c>).
 /// <para>
 /// When the MVC pipeline evaluates <c>[Authorize(Policy = "messages:retry")]</c>, this provider
 /// generates a policy containing a <see cref="PermissionRequirement"/> for that permission.
-/// The <see cref="FailedMessageAuthorizationHandler"/> (for resource-scope checks) handles
+/// The domain-specific resource handler (e.g. <c>FailedMessageAuthorizationHandler</c>) handles
 /// the same requirement — but with a resource object — when called explicitly via
 /// <see cref="IAuthorizationService.AuthorizeAsync"/> in the controller.
 /// </para>
 /// <para>
-/// Policy names that are not permission strings (e.g., names registered via
+/// When OIDC is disabled, this provider returns a permissive allow-all policy for any known
+/// permission name, preserving the pre-RBAC behaviour (everything allowed).
+/// </para>
+/// <para>
+/// Policy names that are not known permission strings (e.g. names registered via
 /// <see cref="AuthorizationOptions"/>) return <see langword="null"/> so the framework
 /// falls back to its default policy resolution.
 /// </para>
 /// </summary>
-public sealed class PermissionPolicyProvider(IOptions<AuthorizationOptions> authorizationOptions)
+public sealed class PermissionPolicyProvider(
+    IOptions<AuthorizationOptions> authorizationOptions,
+    bool oidcEnabled)
     : IAuthorizationPolicyProvider
 {
-    // The verb-level handler that uses IPermissionEvaluator.HasPermission.
-    // Registered as a singleton alongside the resource-based handler.
-    //
-    // Note: this policy uses the PermissionRequirement, but the
-    // PermissionVerbHandler (not FailedMessageAuthorizationHandler) handles it
-    // at the verb level (no resource is in scope at this point).
-    //
-    // A permission string is "resource:action" — it contains a colon.
-    // Standard policy names (like "AuthenticatedUser") don't contain a colon.
-    static bool IsPermission(string policyName) =>
-        policyName.Contains(':');
+    static readonly AuthorizationPolicy AllowAllPolicy =
+        new AuthorizationPolicyBuilder().RequireAssertion(_ => true).Build();
+
+    /// <summary>
+    /// Returns <see langword="true"/> only when <paramref name="policyName"/> is a known permission.
+    /// Unknown <c>resource:action</c> strings that happen to contain a colon are not treated as permissions.
+    /// </summary>
+    static bool IsKnownPermission(string policyName) =>
+        Permissions.All.Contains(policyName);
 
     public Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)
     {
-        if (!IsPermission(policyName))
+        if (!IsKnownPermission(policyName))
         {
             return Task.FromResult<AuthorizationPolicy?>(null);
         }
 
-        // Build a policy dynamically: it contains one PermissionRequirement for this permission.
-        // The verb-level PermissionVerbHandler evaluates HasPermission() for this requirement
-        // when no resource is present (i.e., at the [Authorize] attribute level).
+        if (!oidcEnabled)
+        {
+            // OIDC disabled → return a permissive allow-all policy so [Authorize(Policy=...)]
+            // attributes do not block requests when the authorization middleware is present.
+            return Task.FromResult<AuthorizationPolicy?>(AllowAllPolicy);
+        }
+
+        // OIDC enabled → build a real policy requiring the named permission.
+        // The PermissionVerbHandler evaluates HasPermission() when no resource is present.
         var policy = new AuthorizationPolicyBuilder()
             .AddRequirements(new PermissionRequirement(policyName))
             .Build();
@@ -56,7 +66,6 @@ public sealed class PermissionPolicyProvider(IOptions<AuthorizationOptions> auth
 
     public Task<AuthorizationPolicy> GetDefaultPolicyAsync()
     {
-        // Delegate to the options-based default policy (RequireAuthenticatedUser).
         var defaultPolicy = authorizationOptions.Value.DefaultPolicy
             ?? new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
         return Task.FromResult(defaultPolicy);

@@ -6,39 +6,52 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
-using ServiceControl.MessageFailures.Api.Auth;
+using ServiceControl.Infrastructure.WebApi.Auth;
 
 /// <summary>
 /// Tests the dynamic policy provider that generates verb-level policies from permission strings.
-/// The provider generates a policy for any permission string and returns null for other policy names.
+/// When OIDC is enabled: generates a real PermissionRequirement policy for known permissions.
+/// When OIDC is disabled: generates a permissive allow-all policy for known permissions.
+/// Unknown policy names return null in both modes.
 /// </summary>
 [TestFixture]
 public class PermissionPolicyProviderTests
 {
-    static PermissionPolicyProvider BuildProvider()
+    static PermissionPolicyProvider BuildProvider(bool oidcEnabled = true)
     {
         var authOptions = new AuthorizationOptions();
-        return new PermissionPolicyProvider(Options.Create(authOptions));
+        return new PermissionPolicyProvider(Options.Create(authOptions), oidcEnabled);
     }
 
     [Test]
-    public async Task Provider_returns_non_null_policy_for_permission_string()
+    public async Task Provider_returns_non_null_policy_for_known_permission_when_oidc_enabled()
     {
-        var provider = BuildProvider();
+        var provider = BuildProvider(oidcEnabled: true);
         var policy = await provider.GetPolicyAsync("messages:retry");
-        Assert.That(policy, Is.Not.Null, "Provider must return a policy for a permission string");
+        Assert.That(policy, Is.Not.Null, "Provider must return a policy for a known permission string");
     }
 
     [Test]
-    public async Task Provider_policy_contains_PermissionRequirement()
+    public async Task Provider_policy_contains_PermissionRequirement_when_oidc_enabled()
     {
-        var provider = BuildProvider();
+        var provider = BuildProvider(oidcEnabled: true);
         var policy = await provider.GetPolicyAsync("messages:retry");
         Assert.That(policy, Is.Not.Null);
         Assert.That(policy!.Requirements, Has.Some.InstanceOf<PermissionRequirement>(),
-            "Policy should contain a PermissionRequirement");
+            "Policy should contain a PermissionRequirement when OIDC is enabled");
         var permReq = (PermissionRequirement)policy.Requirements.First(r => r is PermissionRequirement);
         Assert.That(permReq.Permission, Is.EqualTo("messages:retry"));
+    }
+
+    [Test]
+    public async Task Provider_returns_allow_all_policy_for_known_permission_when_oidc_disabled()
+    {
+        var provider = BuildProvider(oidcEnabled: false);
+        var policy = await provider.GetPolicyAsync("messages:retry");
+        Assert.That(policy, Is.Not.Null, "Provider must return an allow-all policy when OIDC is disabled");
+        // Allow-all: RequireAssertion(_ => true) — no DenyAnonymous requirement
+        Assert.That(policy!.Requirements, Has.None.InstanceOf<PermissionRequirement>(),
+            "Allow-all policy must not contain a PermissionRequirement");
     }
 
     [Test]
@@ -49,6 +62,15 @@ public class PermissionPolicyProviderTests
         // to the default provider. Returning null signals "I don't own this policy name".
         var policy = await provider.GetPolicyAsync("SomeOtherPolicy");
         Assert.That(policy, Is.Null);
+    }
+
+    [Test]
+    public async Task Provider_returns_null_for_unknown_colon_name()
+    {
+        // A name that contains ':' but is not a known permission must not silently get a policy.
+        var provider = BuildProvider(oidcEnabled: true);
+        var policy = await provider.GetPolicyAsync("unknown:action");
+        Assert.That(policy, Is.Null, "Unknown permission-shaped names must not silently generate a policy");
     }
 
     [Test]

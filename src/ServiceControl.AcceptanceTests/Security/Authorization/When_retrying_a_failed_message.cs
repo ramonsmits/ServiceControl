@@ -23,7 +23,8 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
     /// (b) unpermitted role → 403 Forbidden
     /// (c) scoped role → in-scope 202, out-of-scope 403
     /// (d) allow AND deny decisions appear in the ServiceControl.Audit log
-    /// (e) OIDC disabled → endpoint is accessible without auth
+    ///     — out-of-scope deny must be logged by the resource-stage handler (has queue name in log)
+    /// (e) OIDC disabled → endpoint is accessible without auth (returns 202 Accepted)
     /// </summary>
     class When_retrying_a_failed_message : AcceptanceTest
     {
@@ -201,14 +202,64 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
                 .Run();
 
             var auditEntries = recordingProvider.EntriesFor("ServiceControl.Audit");
+
+            // The resource-stage allow decision must be present, identifiable by the queue address.
             Assert.That(auditEntries, Has.Some.Matches<LogEntry>(e =>
-                e.Message.Contains("messages:retry") && e.Message.Contains("allow")),
-                "An allow decision for messages:retry must appear in ServiceControl.Audit log");
+                e.Message.Contains("messages:retry")
+                && e.Message.Contains("allow")
+                && e.Message.Contains(SalesQueueAddress)),
+                "A resource-stage allow decision for messages:retry must appear in ServiceControl.Audit log " +
+                "and must include the queue address as the resource");
+        }
+
+        [Test]
+        public async Task Deny_decision_for_out_of_scope_is_logged_with_queue_as_resource()
+        {
+            // This test specifically verifies that the resource-stage deny (not just the verb-stage deny)
+            // is logged when a scoped role is denied due to queue address being out of scope.
+            // The resource-stage log is identifiable by the queue address appearing in the log entry.
+            var messageId = Guid.NewGuid().ToString("N");
+            var recordingProvider = new RecordingLoggerProvider();
+
+            CustomizeHostBuilder = hb =>
+                hb.Services.AddSingleton<Microsoft.Extensions.Logging.ILoggerProvider>(recordingProvider);
+
+            using var scopedConfig = new ScopedRbacConfiguration();
+
+            _ = await Define<Context>()
+                .Done(async ctx =>
+                {
+                    // Finance queue is outside sales-operator's scope
+                    await StoreFailedMessage(messageId, FinanceQueueAddress);
+
+                    var token = mockOidcServer.GenerateTokenWithRealmRoles(
+                        subject: "sales-operator-audit",
+                        realmRoles: ["sales-operator"]);
+
+                    await SendRetry(token, messageId);
+                    return true;
+                })
+                .Run();
+
+            var auditEntries = recordingProvider.EntriesFor("ServiceControl.Audit");
+
+            // The resource-stage deny must include the queue address as the resource field,
+            // proving it is the resource-stage log (not just the verb-stage log).
+            Assert.That(auditEntries, Has.Some.Matches<LogEntry>(e =>
+                e.Message.Contains("messages:retry")
+                && e.Message.Contains("deny")
+                && e.Message.Contains(FinanceQueueAddress)),
+                "A resource-stage deny decision for messages:retry must appear in ServiceControl.Audit log " +
+                "and must include the out-of-scope queue address as the resource");
         }
 
         [Test]
         public async Task Deny_decision_is_logged_to_ServiceControl_Audit_category()
         {
+            // Verb-stage deny: a user without the permission at all (sc-viewer).
+            // The verb-stage handler logs without a resource field (resource = null).
+            // The resource-stage handler runs after, via IsInScope, and also logs a deny
+            // (since IsInScope returns false when the user has no grant at all).
             var messageId = Guid.NewGuid().ToString("N");
             var recordingProvider = new RecordingLoggerProvider();
 
@@ -240,7 +291,7 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
         // -----------------------------------------------------------------------
 
         [Test]
-        public async Task When_auth_disabled_retry_endpoint_is_accessible_without_token()
+        public async Task When_auth_disabled_retry_endpoint_accepts_without_token()
         {
             // Override: disable auth for this test
             configuration?.Dispose();
@@ -265,10 +316,9 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
                 .Run();
 
             // With auth disabled, the endpoint behaves as pre-RBAC: it accepts without a token.
-            // 202 Accepted OR 404 (if the message ID doesn't match exactly) — either way, not 401/403.
-            Assert.That(response.StatusCode,
-                Is.Not.EqualTo(HttpStatusCode.Unauthorized).And.Not.EqualTo(HttpStatusCode.Forbidden),
-                "With OIDC disabled, the retry endpoint must not require authentication");
+            // The message exists in the store so we expect 202 Accepted.
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Accepted),
+                "With OIDC disabled, the retry endpoint must accept unauthenticated requests with 202 Accepted");
         }
 
         // -----------------------------------------------------------------------

@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using NUnit.Framework;
 using ServiceControl.Infrastructure.Auth.Rbac;
+using ServiceControl.Infrastructure.WebApi.Auth;
 using ServiceControl.MessageFailures;
-using ServiceControl.MessageFailures.Api.Auth;
 using ServiceControl.Contracts.Operations;
 
 /// <summary>

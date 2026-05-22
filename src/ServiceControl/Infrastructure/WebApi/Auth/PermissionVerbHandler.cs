@@ -1,10 +1,9 @@
 #nullable enable
-namespace ServiceControl.MessageFailures.Api.Auth;
+namespace ServiceControl.Infrastructure.WebApi.Auth;
 
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using ServiceControl.Infrastructure.Auth.Rbac;
-using ServiceControl.MessageFailures;
 
 /// <summary>
 /// S3 verb-level authorization handler for <see cref="PermissionRequirement"/>.
@@ -15,7 +14,8 @@ using ServiceControl.MessageFailures;
 /// </para>
 /// <para>
 /// The fine-grained resource-scope check (which specific record?) is performed by
-/// <see cref="FailedMessageAuthorizationHandler"/> after the record is loaded.
+/// the domain-specific resource handler (e.g. <c>FailedMessageAuthorizationHandler</c>)
+/// after the record is loaded.
 /// </para>
 /// </summary>
 public sealed class PermissionVerbHandler(
@@ -27,17 +27,17 @@ public sealed class PermissionVerbHandler(
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
-        // When the resource is a FailedMessage (the explicit resource-scope check),
-        // the FailedMessageAuthorizationHandler owns the entire decision — including
-        // the verb-level HasPermission check. Skip here to avoid double logging.
-        if (context.Resource is FailedMessage)
+        // When the resource is a domain object (i.e., an explicit resource-scope check via
+        // IAuthorizationService.AuthorizeAsync(user, resource, requirement)), the domain-specific
+        // handler owns the entire decision — skip here to avoid double-logging the verb gate.
+        // The AuthorizationMiddleware sets context.Resource to the HttpContext; explicit calls
+        // set it to the domain entity. We only own the verb-level (HttpContext or null) case.
+        if (context.Resource is not null and not Microsoft.AspNetCore.Http.HttpContext)
         {
             return Task.CompletedTask;
         }
 
-        var subject = context.User.FindFirst("sub")?.Value
-                   ?? context.User.Identity?.Name
-                   ?? "unknown";
+        var subject = AuthorizationHelpers.GetSubject(context.User);
         var permission = requirement.Permission;
 
         if (permissionEvaluator.HasPermission(context.User, permission))

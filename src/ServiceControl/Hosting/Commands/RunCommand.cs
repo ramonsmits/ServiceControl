@@ -10,7 +10,7 @@
     using ServiceControl;
     using ServiceControl.Hosting.Auth;
     using ServiceControl.Hosting.Https;
-    using ServiceControl.MessageFailures.Api.Auth;
+    using ServiceControl.Infrastructure.WebApi.Auth;
     using ServicePulse;
 
     class RunCommand : AbstractCommand

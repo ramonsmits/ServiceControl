@@ -15,7 +15,8 @@ namespace ServiceControl.MessageFailures.Api
     using ServiceBus.Management.Infrastructure.Settings;
     using ServiceControl.Infrastructure.Auth.Rbac;
     using ServiceControl.Infrastructure.WebApi;
-    using ServiceControl.MessageFailures.Api.Auth;
+    using ServiceControl.Infrastructure.WebApi.Auth;
+    using ServiceControl.MessageFailures;
     using ServiceControl.Persistence;
     using Yarp.ReverseProxy.Forwarder;
 
@@ -58,7 +59,24 @@ namespace ServiceControl.MessageFailures.Api
 
                 if (!scopeResult.Succeeded)
                 {
-                    return Forbid();
+                    // Return a structured 403 body so API consumers get a machine-readable reason.
+                    var queueAddress = message.ProcessingAttempts
+                        .LastOrDefault()
+                        ?.FailureDetails
+                        ?.AddressOfFailingEndpoint;
+
+                    Response.ContentType = "application/json";
+                    Response.StatusCode = StatusCodes.Status403Forbidden;
+                    await Response.WriteAsJsonAsync(new
+                    {
+                        error = "forbidden",
+                        permission = Permissions.MessagesRetry,
+                        resource = queueAddress,
+                        reason = string.IsNullOrEmpty(queueAddress)
+                            ? "Message has no resolvable queue address"
+                            : $"Queue '{queueAddress}' is out of scope for permission '{Permissions.MessagesRetry}'"
+                    });
+                    return Empty;
                 }
 
                 await messageSession.SendLocal<RetryMessage>(m => m.FailedMessageId = failedMessageId);

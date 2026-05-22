@@ -100,6 +100,8 @@ namespace ServiceControl.MessageFailures.Api
             return Empty;
         }
 
+        [RequirePermission(Permissions.MessagesRetry)]
+        [Authorize(Policy = Permissions.MessagesRetry)]
         [Route("errors/retry")]
         [HttpPost]
         public async Task<IActionResult> RetryAllBy(List<string> messageIds)
@@ -114,6 +116,8 @@ namespace ServiceControl.MessageFailures.Api
             return Accepted();
         }
 
+        [RequirePermission(Permissions.MessagesRetry)]
+        [Authorize(Policy = Permissions.MessagesRetry)]
         [Route("errors/queues/{queueAddress:required:minlength(1)}/retry")]
         [HttpPost]
         public async Task<IActionResult> RetryAllBy(string queueAddress)
@@ -127,6 +131,8 @@ namespace ServiceControl.MessageFailures.Api
             return Accepted();
         }
 
+        [RequirePermission(Permissions.MessagesRetry)]
+        [Authorize(Policy = Permissions.MessagesRetry)]
         [Route("errors/retry/all")]
         [HttpPost]
         public async Task<IActionResult> RetryAll()
@@ -136,6 +142,8 @@ namespace ServiceControl.MessageFailures.Api
             return Accepted();
         }
 
+        [RequirePermission(Permissions.MessagesRetry)]
+        [Authorize(Policy = Permissions.MessagesRetry)]
         [Route("errors/{endpointName:required:minlength(1)}/retry/all")]
         [HttpPost]
         public async Task<IActionResult> RetryAllByEndpoint(string endpointName)

@@ -1,7 +1,11 @@
 ﻿namespace ServiceControl.Recoverability.API
 {
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
+    using ServiceControl.Infrastructure.Auth.Rbac;
+    using ServiceControl.Infrastructure.WebApi;
+    using ServiceControl.Infrastructure.WebApi.Auth;
     using ServiceControl.Persistence;
     using ServiceControl.Persistence.Recoverability;
 
@@ -9,6 +13,8 @@
     [Route("api")]
     public class UnacknowledgedGroupsController(IRetryHistoryDataStore retryStore, IArchiveMessages archiver) : ControllerBase
     {
+        [RequirePermission(Permissions.RecoverabilityGroupsView)]
+        [Authorize(Policy = Permissions.RecoverabilityGroupsView)]
         [Route("recoverability/unacknowledgedgroups/{groupId:required:minlength(1)}")]
         [HttpDelete]
         public async Task<IActionResult> AcknowledgeOperation(string groupId)

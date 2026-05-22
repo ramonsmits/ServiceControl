@@ -5,12 +5,16 @@
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Logging;
     using NServiceBus;
     using Persistence;
     using Recoverability;
     using ServiceBus.Management.Infrastructure.Settings;
+    using ServiceControl.Infrastructure.Auth.Rbac;
+    using ServiceControl.Infrastructure.WebApi;
+    using ServiceControl.Infrastructure.WebApi.Auth;
 
     [ApiController]
     [Route("api")]
@@ -21,10 +25,14 @@
         ILogger<EditFailedMessagesController> logger)
         : ControllerBase
     {
+        [RequirePermission(Permissions.MessagesEdit)]
+        [Authorize(Policy = Permissions.MessagesEdit)]
         [Route("edit/config")]
         [HttpGet]
         public EditConfigurationModel Config() => GetEditConfiguration();
 
+        [RequirePermission(Permissions.MessagesEdit)]
+        [Authorize(Policy = Permissions.MessagesEdit)]
         [Route("edit/{failedMessageId:required:minlength(1)}")]
         [HttpPost]
         public async Task<ActionResult<EditRetryResponse>> Edit(string failedMessageId, [FromBody] EditMessageModel edit)

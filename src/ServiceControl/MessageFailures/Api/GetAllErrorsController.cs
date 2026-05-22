@@ -3,14 +3,19 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Infrastructure.WebApi;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Persistence.Infrastructure;
+    using ServiceControl.Infrastructure.Auth.Rbac;
+    using ServiceControl.Infrastructure.WebApi.Auth;
     using ServiceControl.Persistence;
 
     [ApiController]
     [Route("api")]
     public class GetAllErrorsController(IErrorMessageDataStore store) : ControllerBase
     {
+        [RequirePermission(Permissions.MessagesView)]
+        [Authorize(Policy = Permissions.MessagesView)]
         [Route("errors")]
         [HttpGet]
         public async Task<IList<FailedMessageView>> ErrorsGet([FromQuery] PagingInfo pagingInfo, [FromQuery] SortInfo sortInfo, string status, string modified, string queueAddress)
@@ -28,6 +33,8 @@
             return results.Results;
         }
 
+        [RequirePermission(Permissions.MessagesView)]
+        [Authorize(Policy = Permissions.MessagesView)]
         [Route("errors")]
         [HttpHead]
         public async Task ErrorsHead(string status, string modified, string queueAddress)
@@ -41,6 +48,8 @@
             Response.WithQueryStatsInfo(queryResult);
         }
 
+        [RequirePermission(Permissions.MessagesView)]
+        [Authorize(Policy = Permissions.MessagesView)]
         [Route("endpoints/{endpointname}/errors")]
         [HttpGet]
         public async Task<IList<FailedMessageView>> ErrorsByEndpointName([FromQuery] PagingInfo pagingInfo, [FromQuery] SortInfo sortInfo, string status, string modified, string endpointName)
@@ -58,6 +67,8 @@
             return results.Results;
         }
 
+        [RequirePermission(Permissions.MessagesView)]
+        [Authorize(Policy = Permissions.MessagesView)]
         [Route("errors/summary")]
         [HttpGet]
         public async Task<IDictionary<string, object>> ErrorsSummary() => await store.ErrorsSummary();

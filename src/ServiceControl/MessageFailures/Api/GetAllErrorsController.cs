@@ -12,7 +12,9 @@
 
     [ApiController]
     [Route("api")]
-    public class GetAllErrorsController(IErrorMessageDataStore store) : ControllerBase
+    public class GetAllErrorsController(
+        IErrorMessageDataStore store,
+        IPermissionEvaluator permissionEvaluator) : ControllerBase
     {
         [RequirePermission(Permissions.MessagesView)]
         [Authorize(Policy = Permissions.MessagesView)]
@@ -30,7 +32,8 @@
 
             Response.WithQueryStatsAndPagingInfo(results.QueryStats, pagingInfo);
 
-            return results.Results;
+            // R1: filter results to those in scope for the requesting user.
+            return results.Results.FilterByPermittedQueues(User, Permissions.MessagesView, permissionEvaluator);
         }
 
         [RequirePermission(Permissions.MessagesView)]
@@ -64,7 +67,8 @@
 
             Response.WithQueryStatsAndPagingInfo(results.QueryStats, pagingInfo);
 
-            return results.Results;
+            // R1: filter results to those in scope for the requesting user.
+            return results.Results.FilterByPermittedQueues(User, Permissions.MessagesView, permissionEvaluator);
         }
 
         [RequirePermission(Permissions.MessagesView)]

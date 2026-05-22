@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ServiceControl.Infrastructure;
 using ServiceControl.MessageFailures;
+using ServiceControl.Recoverability;
 
 /// <summary>
 /// Registers the S3 resource-based authorization handlers and the dynamic permission policy provider.
@@ -58,6 +59,10 @@ public static class S3AuthorizationExtensions
 
         // Resource-scope handler: PermissionRequirement + FailedMessage (fires from explicit AuthorizeAsync call)
         services.AddSingleton<IAuthorizationHandler, FailedMessageAuthorizationHandler>();
+
+        // Resource-scope handler: PermissionRequirement + FailureGroupView
+        // Groups span multiple queues; fail-closed for scoped users (see FailureGroupAuthorizationHandler).
+        services.AddSingleton<IAuthorizationHandler, FailureGroupAuthorizationHandler>();
     }
 
     /// <summary>

@@ -48,7 +48,6 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
             "GET api/errors/summary",
             "GET api/errors/{failedMessageId:required:minlength(1)}",
             "GET api/errors/last/{failedMessageId:required:minlength(1)}",
-            "POST api/errors/{failedMessageId:required:minlength(1)}/retry",
             "POST api/errors/retry",
             "POST api/errors/retry/all",
             "POST api/errors/queues/{queueAddress:required:minlength(1)}/retry",

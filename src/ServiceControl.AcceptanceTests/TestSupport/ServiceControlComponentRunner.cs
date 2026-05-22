@@ -27,6 +27,7 @@
     using RavenDB.Shared;
     using ServiceBus.Management.Infrastructure.Settings;
     using ServiceControl.Infrastructure;
+    using ServiceControl.MessageFailures.Api.Auth;
 
     public class ServiceControlComponentRunner : ComponentRunner, IAcceptanceTestInfrastructureProvider
     {
@@ -125,6 +126,7 @@
                 });
                 hostBuilder.AddServiceControlAuthentication(settings.OpenIdConnectSettings);
                 hostBuilder.AddServiceControlAuthorization(settings.OpenIdConnectSettings);
+                hostBuilder.AddServiceControlS3Authorization(settings.OpenIdConnectSettings);
                 hostBuilder.AddServiceControl(settings, configuration);
                 hostBuilder.AddServiceControlHttps(settings.HttpsSettings);
                 hostBuilder.AddServiceControlApi(settings.CorsSettings);

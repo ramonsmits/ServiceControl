@@ -14,6 +14,7 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
     using Microsoft.Extensions.DependencyInjection;
     using NServiceBus.AcceptanceTesting;
     using NUnit.Framework;
+    using ServiceControl.Operations;
     using ServiceControl.Persistence;
 
     /// <summary>
@@ -413,6 +414,25 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
                         {
                             ["NServiceBus.MessageId"] = uniqueMessageId,
                             ["NServiceBus.FailedQ"] = queueAddress
+                        },
+                        MessageMetadata = new Dictionary<string, object>
+                        {
+                            ["MessageId"] = uniqueMessageId,
+                            ["MessageType"] = "TestMessage",
+                            ["IsSystemMessage"] = false,
+                            ["TimeSent"] = DateTime.UtcNow,
+                            ["ReceivingEndpoint"] = new EndpointDetails
+                            {
+                                Name = queueAddress.Split('@')[0],
+                                Host = "localhost",
+                                HostId = Guid.Empty
+                            },
+                            ["SendingEndpoint"] = new EndpointDetails
+                            {
+                                Name = queueAddress.Split('@')[0],
+                                Host = "localhost",
+                                HostId = Guid.Empty
+                            }
                         }
                     }
                 ]

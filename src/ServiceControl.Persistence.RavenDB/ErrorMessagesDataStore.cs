@@ -290,29 +290,28 @@
         public async Task<IDictionary<string, object>> ErrorsSummary()
         {
             using var session = await sessionProvider.OpenSession();
+            // In RavenDB 6.x, DisplayFieldName is used as the actual index field to aggregate on
+            // (not FieldName as in 5.x), so we only set FieldName here and remap the keys afterward
+            // to preserve the original API contract ("Endpoints", "Hosts", "Message types").
             var facetResults = await session.Query<FailedMessage, FailedMessageFacetsIndex>()
                 .AggregateBy(new List<Facet>
                 {
-                    new Facet
-                    {
-                        FieldName = "Name",
-                        DisplayFieldName = "Endpoints"
-                    },
-                    new Facet
-                    {
-                        FieldName = "Host",
-                        DisplayFieldName = "Hosts"
-                    },
-                    new Facet
-                    {
-                        FieldName = "MessageType",
-                        DisplayFieldName = "Message types"
-                    }
+                    new Facet { FieldName = "Name" },
+                    new Facet { FieldName = "Host" },
+                    new Facet { FieldName = "MessageType" }
                 }).ExecuteAsync();
+
+            // Remap index-field keys to the display names expected by consumers.
+            var keyMap = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["Name"] = "Endpoints",
+                ["Host"] = "Hosts",
+                ["MessageType"] = "Message types"
+            };
 
             var results = facetResults
                 .ToDictionary(
-                    x => x.Key,
+                    x => keyMap.TryGetValue(x.Key, out var display) ? display : x.Key,
                     x => (object)x.Value
                 );
 

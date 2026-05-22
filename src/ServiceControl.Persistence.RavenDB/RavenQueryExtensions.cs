@@ -272,9 +272,10 @@ namespace ServiceControl.Persistence
 
                 if (lower.EndsWith(".*", StringComparison.Ordinal))
                 {
-                    // Prefix wildcard: "Prefix.*" → Lucene query "Prefix.*"
-                    // The Lucene suffix wildcard matches everything after the dot.
-                    source.WhereLucene("QueueAddress", lower);
+                    // Prefix wildcard: "Prefix.*" → starts-with "prefix."
+                    // Strip the trailing "*" to get the prefix including the dot.
+                    var prefix = lower[..^1]; // e.g. "sales." from "sales.*"
+                    source.WhereStartsWith("QueueAddress", prefix);
                 }
                 else
                 {
@@ -293,7 +294,8 @@ namespace ServiceControl.Persistence
                 if (lower.EndsWith(".*", StringComparison.Ordinal))
                 {
                     // Prefix deny: AND NOT (QueueAddress STARTS WITH prefix).
-                    source.AndAlso().Not.WhereLucene("QueueAddress", lower);
+                    var prefix = lower[..^1]; // e.g. "finance." from "finance.*"
+                    source.AndAlso().Not.WhereStartsWith("QueueAddress", prefix);
                 }
                 else
                 {

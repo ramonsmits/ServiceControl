@@ -63,13 +63,32 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
         }
 
         // -----------------------------------------------------------------------
-        // GET api/edit/config (AuthenticatedOnly — any authenticated user)
+        // GET api/edit/config (requires messages:edit)
         // -----------------------------------------------------------------------
 
         [Test]
-        public async Task EditConfig_viewer_receives_200()
+        public async Task EditConfig_operator_receives_200()
         {
-            // edit/config is AuthenticatedOnly in S4, so even sc-viewer gets 200
+            // edit/config requires messages:edit; sc-operator has this permission
+            HttpResponseMessage response = null;
+            _ = await Define<Context>()
+                .Done(async ctx =>
+                {
+                    var token = mockOidcServer.GenerateTokenWithRealmRoles("operator-alice", ["sc-operator"]);
+                    response = await OpenIdConnectAssertions.SendRequestWithBearerToken(
+                        HttpClient, HttpMethod.Get, "/api/edit/config", token);
+                    return response != null;
+                })
+                .Run();
+
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK),
+                "sc-operator (has messages:edit) should receive 200 for GET api/edit/config");
+        }
+
+        [Test]
+        public async Task EditConfig_viewer_receives_403()
+        {
+            // edit/config requires messages:edit; sc-viewer only has messages:view
             HttpResponseMessage response = null;
             _ = await Define<Context>()
                 .Done(async ctx =>
@@ -81,8 +100,8 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
                 })
                 .Run();
 
-            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK),
-                "sc-viewer (authenticated) should receive 200 for GET api/edit/config (AuthenticatedOnly)");
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden),
+                "sc-viewer (lacks messages:edit) should receive 403 for GET api/edit/config");
         }
 
         [Test]

@@ -12,7 +12,6 @@
     [Route("api")]
     public class GetErrorByIdController(
         IErrorMessageDataStore store,
-        IPermissionEvaluator permissionEvaluator,
         ICasbinResourceScopeChecker scopeChecker) : ControllerBase
     {
         [Authorize(Policy = Permissions.MessagesView)]
@@ -59,13 +58,16 @@
                 return NotFound();
             }
 
-            // Resource-scope check: consistent with ErrorBy — a scoped user must not view
-            // a message whose queue is outside their scope.
-            if (!permissionEvaluator.HasUnrestrictedGrant(User, Permissions.MessagesView)
-                && !permissionEvaluator.IsInScope(User, Permissions.MessagesView, result.QueueAddress ?? string.Empty))
+            // Resource-scope check via the same mechanism as ErrorBy — single code path per action.
+            var scopeResult = await scopeChecker.EnforceAsync(
+                User,
+                Permissions.MessagesView,
+                result.QueueAddress,
+                HttpContext);
+
+            if (scopeResult != null)
             {
-                await AuthorizationHelpers.WriteScopeDenied403(Response, Permissions.MessagesView, result.QueueAddress);
-                return Empty;
+                return scopeResult;
             }
 
             return Ok(result);

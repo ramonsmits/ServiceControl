@@ -1,6 +1,8 @@
 #nullable enable
 namespace ServiceControl.Infrastructure.WebApi.Auth;
 
+using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Casbin;
 using Microsoft.AspNetCore.Http;
@@ -19,14 +21,15 @@ using ServiceControl.Infrastructure.Auth.Rbac;
 /// </para>
 ///
 /// <para>
-/// <b>Fail-closed:</b> a null or empty queue address is denied. A message with no resolvable
-/// queue address cannot be scope-checked, so it is safest to deny.
+/// <b>Subject mapping:</b> Casbin policy subjects are <c>role:X</c> strings matching the
+/// compiled p-lines from <c>rbac.yaml</c>. The check calls <c>Enforce("role:X", perm, res)</c>
+/// for each of the user's <c>role</c> claims — access is granted if ANY role allows it
+/// and NO role denies it (the deny-override model).
 /// </para>
 ///
 /// <para>
-/// <b>OIDC disabled:</b> this class is not registered when OIDC is off. Controllers must guard
-/// with a null-check or use the injected <see cref="IAllowAllScopeChecker"/> surrogate.
-/// In practice the DI container returns an <see cref="AllowAllScopeChecker"/> when OIDC is off.
+/// <b>Fail-closed:</b> a null or empty queue address is denied. A message with no resolvable
+/// queue address cannot be scope-checked, so it is safest to deny.
 /// </para>
 /// </summary>
 public interface ICasbinResourceScopeChecker
@@ -43,7 +46,7 @@ public interface ICasbinResourceScopeChecker
     /// that the controller should return if access is denied.
     /// </returns>
     Task<IActionResult?> EnforceAsync(
-        System.Security.Claims.ClaimsPrincipal user,
+        ClaimsPrincipal user,
         string permission,
         string? queueAddress,
         HttpContext httpContext);
@@ -58,7 +61,7 @@ public sealed class CasbinResourceScopeChecker(
     : ICasbinResourceScopeChecker
 {
     public async Task<IActionResult?> EnforceAsync(
-        System.Security.Claims.ClaimsPrincipal user,
+        ClaimsPrincipal user,
         string permission,
         string? queueAddress,
         HttpContext httpContext)
@@ -79,8 +82,11 @@ public sealed class CasbinResourceScopeChecker(
             return new EmptyResult();
         }
 
-        // Ask Casbin: does this user hold the permission for this specific queue?
-        var allowed = await enforcer.EnforceAsync(subject, permission, queueAddress);
+        // Ask Casbin: does ANY of the user's roles allow this permission for this specific queue?
+        // Casbin's deny-override model handles cases where one role allows and another denies.
+        var casbinSubjects = CasbinPermissionVerbHandler.GetCasbinSubjects(user).ToList();
+        var allowed = casbinSubjects.Any(casbinSub =>
+            enforcer.Enforce(casbinSub, permission, queueAddress));
 
         if (allowed)
         {
@@ -115,7 +121,7 @@ public sealed class CasbinResourceScopeChecker(
 public sealed class AllowAllScopeChecker : ICasbinResourceScopeChecker
 {
     public Task<IActionResult?> EnforceAsync(
-        System.Security.Claims.ClaimsPrincipal user,
+        ClaimsPrincipal user,
         string permission,
         string? queueAddress,
         HttpContext httpContext)

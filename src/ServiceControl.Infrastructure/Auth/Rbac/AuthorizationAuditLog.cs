@@ -1,6 +1,7 @@
 #nullable enable
 namespace ServiceControl.Infrastructure.Auth.Rbac;
 
+using System;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
@@ -20,19 +21,25 @@ public sealed partial class AuthorizationAuditLog : IAuthorizationAuditLog
     }
 
     /// <inheritdoc />
-    public void Decision(string subject, string permission, string? resource, bool allowed, string reason)
+    public void Decision(string subjectId, string subjectName, string permission, string? resource, bool allowed, string reason)
     {
-        LogDecision(logger, subject, permission, resource, allowed ? "allow" : "deny", reason);
+        ArgumentException.ThrowIfNullOrEmpty(subjectId);
+        ArgumentException.ThrowIfNullOrEmpty(subjectName);
+        ArgumentException.ThrowIfNullOrEmpty(permission);
+        ArgumentException.ThrowIfNullOrEmpty(reason);
+
+        LogDecision(logger, subjectId, subjectName, permission, resource, allowed ? "allow" : "deny", reason);
     }
 
     // Source-generated structured log method — zero allocation on the hot path.
     [LoggerMessage(
         EventId = 1001,
         Level = LogLevel.Information,
-        Message = "Authorization {Outcome}: subject={Subject} permission={Permission} resource={Resource} reason={Reason}")]
+        Message = "Authorization {Outcome}: subjectId={SubjectId} subjectName={SubjectName} permission={Permission} resource={Resource} reason={Reason}")]
     static partial void LogDecision(
         ILogger logger,
-        string subject,
+        string subjectId,
+        string subjectName,
         string permission,
         string? resource,
         string outcome,

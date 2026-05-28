@@ -2,7 +2,6 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
 {
     using System.Net;
     using System.Net.Http;
-    using System.Text;
     using System.Threading.Tasks;
     using AcceptanceTesting;
     using AcceptanceTesting.Auth;
@@ -356,20 +355,6 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
                 .Run();
 
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
-        }
-
-        // -----------------------------------------------------------------------
-        // Helpers
-        // -----------------------------------------------------------------------
-
-        Task<HttpResponseMessage> SendJsonRequest(string token, HttpMethod method, string path, string json)
-        {
-            var request = new HttpRequestMessage(method, path)
-            {
-                Content = new StringContent(json, Encoding.UTF8, "application/json")
-            };
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-            return HttpClient.SendAsync(request);
         }
 
         class Context : ScenarioContext;

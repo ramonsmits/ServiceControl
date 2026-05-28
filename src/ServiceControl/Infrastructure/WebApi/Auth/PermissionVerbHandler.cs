@@ -35,6 +35,14 @@ public sealed class PermissionVerbHandler(
             return Task.CompletedTask;
         }
 
+        // If the user is not authenticated, do not log a decision — the fallback policy
+        // (RequireAuthenticatedUser) will produce the 401. Logging here would throw because
+        // sub and display-name claims are absent for anonymous principals.
+        if (context.User.Identity?.IsAuthenticated != true)
+        {
+            return Task.CompletedTask;
+        }
+
         var subjectId = AuthorizationHelpers.RequireSubjectId(context.User);
         var subjectName = AuthorizationHelpers.RequireSubjectName(context.User);
         var permission = requirement.Permission;

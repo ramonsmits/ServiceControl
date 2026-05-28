@@ -38,6 +38,7 @@
                     ValidAudience = oidcSettings.Audience,
                     ClockSkew = TimeSpan.FromMinutes(5) // Allow 5 minutes clock skew
                 };
+                options.TokenValidationParameters.NameClaimType = oidcSettings.SubjectDisplayClaim;
                 options.RequireHttpsMetadata = oidcSettings.RequireHttpsMetadata;
                 // Don't map inbound claims to legacy Microsoft claim types
                 options.MapInboundClaims = false;

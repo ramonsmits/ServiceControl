@@ -42,6 +42,7 @@ public class OpenIdConnectSettings
         }
 
         RbacPolicyFile = SettingsReader.Read(rootNamespace, "Authentication.RbacPolicyFile", "rbac.yaml");
+        SubjectDisplayClaim = SettingsReader.Read(rootNamespace, "Authentication.SubjectDisplayClaim", "preferred_username");
 
         if (validateConfiguration)
         {
@@ -60,6 +61,13 @@ public class OpenIdConnectSettings
     /// Can be overridden via the Authentication.RbacPolicyFile setting.
     /// </summary>
     public string RbacPolicyFile { get; }
+
+    /// <summary>
+    /// The JWT claim used as the human-readable display name for the subject in authorization audit log entries.
+    /// Defaults to <c>preferred_username</c> (OIDC Core standard).
+    /// Can be overridden via the Authentication.SubjectDisplayClaim setting.
+    /// </summary>
+    public string SubjectDisplayClaim { get; }
 
     /// <summary>
     /// The OpenID Connect authority URL (issuer). This is the base URL of the identity provider

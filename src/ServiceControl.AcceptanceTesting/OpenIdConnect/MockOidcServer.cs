@@ -187,7 +187,8 @@ namespace ServiceControl.AcceptanceTesting.OpenIdConnect
             var claims = new List<Claim>
             {
                 new(JwtRegisteredClaimNames.Sub, subject),
-                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new("preferred_username", subject)
             };
 
             if (additionalClaims != null)
@@ -240,7 +241,8 @@ namespace ServiceControl.AcceptanceTesting.OpenIdConnect
             var claims = new List<Claim>
             {
                 new(JwtRegisteredClaimNames.Sub, subject),
-                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new("preferred_username", subject)
             };
 
             var token = new JwtSecurityToken(
@@ -264,7 +266,8 @@ namespace ServiceControl.AcceptanceTesting.OpenIdConnect
             var claims = new List<Claim>
             {
                 new(JwtRegisteredClaimNames.Sub, subject),
-                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new("preferred_username", subject)
             };
 
             var token = new JwtSecurityToken(
@@ -288,7 +291,8 @@ namespace ServiceControl.AcceptanceTesting.OpenIdConnect
             var claims = new List<Claim>
             {
                 new(JwtRegisteredClaimNames.Sub, subject),
-                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new("preferred_username", subject)
             };
 
             var token = new JwtSecurityToken(

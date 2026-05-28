@@ -45,12 +45,12 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
             // Endpoints below lack [Authorize(Policy=X)] / [AuthenticatedOnly] / [AllowAnonymous]:
 
             // Message failures area — wired in Phase 1
+            // "POST api/errors/{failedMessageId:required:minlength(1)}/retry" — enforced in S4 (Casbin)
             "GET api/errors",
             "HEAD api/errors",
             "GET api/errors/summary",
             "GET api/errors/{failedMessageId:required:minlength(1)}",
             "GET api/errors/last/{failedMessageId:required:minlength(1)}",
-            "POST api/errors/{failedMessageId:required:minlength(1)}/retry",
             "POST api/errors/retry",
             "POST api/errors/retry/all",
             "POST api/errors/queues/{queueAddress:required:minlength(1)}/retry",

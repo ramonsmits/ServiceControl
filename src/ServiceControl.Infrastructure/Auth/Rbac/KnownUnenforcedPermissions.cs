@@ -26,8 +26,8 @@ public static class KnownUnenforcedPermissions
     public static readonly IReadOnlySet<string> Set = new HashSet<string>
     {
         // Messages area — enforcement planned in Phase 1 (S2/S3/S4)
+        // MessagesRetry is enforced on the S4 branch by [Authorize(Policy=...)] + CasbinResourceScopeChecker.
         Permissions.MessagesView,
-        Permissions.MessagesRetry,
         Permissions.MessagesArchive,
         Permissions.MessagesUnarchive,
         Permissions.MessagesEdit,

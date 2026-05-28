@@ -79,6 +79,30 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
                 "With OIDC disabled, /api/me/permissions must return 404 (endpoint does not exist in this deployment)");
         }
 
+        [Test]
+        public async Task Me_diagnostics_endpoint_returns_404_when_auth_disabled()
+        {
+            HttpResponseMessage response = null;
+
+            _ = await Define<Context>()
+                .Done(async ctx =>
+                {
+                    // When OIDC is disabled, IPermissionEvaluator is not registered in DI.
+                    // MeDiagnosticsController resolves it optionally and returns 404 so the
+                    // endpoint is effectively absent — non-breaking guarantee, spec §4.
+                    response = await OpenIdConnectAssertions.SendRequestWithoutAuth(
+                        HttpClient,
+                        HttpMethod.Get,
+                        "/api/me/diagnostics");
+
+                    return response != null;
+                })
+                .Run();
+
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound),
+                "With OIDC disabled, /api/me/diagnostics must return 404 (endpoint does not exist in this deployment)");
+        }
+
         class Context : ScenarioContext;
     }
 }

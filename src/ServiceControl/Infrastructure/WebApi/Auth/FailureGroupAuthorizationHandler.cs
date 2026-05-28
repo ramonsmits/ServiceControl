@@ -35,7 +35,8 @@ public sealed class FailureGroupAuthorizationHandler(
         PermissionRequirement requirement,
         FailureGroupView resource)
     {
-        var subject = AuthorizationHelpers.GetSubject(context.User);
+        var subjectId = AuthorizationHelpers.RequireSubjectId(context.User);
+        var subjectName = AuthorizationHelpers.RequireSubjectName(context.User);
         var permission = requirement.Permission;
         var groupId = resource.Id ?? "(unknown-group)";
 
@@ -47,7 +48,8 @@ public sealed class FailureGroupAuthorizationHandler(
         if (hasUnrestrictedGrant)
         {
             auditLog.Decision(
-                subject,
+                subjectId,
+                subjectName,
                 permission,
                 resource: groupId,
                 allowed: true,
@@ -60,7 +62,8 @@ public sealed class FailureGroupAuthorizationHandler(
             // Only scoped grants are held: fail-closed because we cannot map the group
             // to a single queue to validate whether it is within the user's scope.
             auditLog.Decision(
-                subject,
+                subjectId,
+                subjectName,
                 permission,
                 resource: groupId,
                 allowed: false,
@@ -69,7 +72,7 @@ public sealed class FailureGroupAuthorizationHandler(
 
             context.Fail(new AuthorizationFailureReason(
                 this,
-                $"User '{subject}' has only scope-restricted '{permission}' grants; " +
+                $"User '{subjectId}' has only scope-restricted '{permission}' grants; " +
                 $"group '{groupId}' cannot be scope-verified — access denied fail-closed"));
         }
 

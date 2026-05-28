@@ -31,7 +31,8 @@ public sealed class FailedMessageAuthorizationHandler(
         PermissionRequirement requirement,
         FailedMessage resource)
     {
-        var subject = AuthorizationHelpers.GetSubject(context.User);
+        var subjectId = AuthorizationHelpers.RequireSubjectId(context.User);
+        var subjectName = AuthorizationHelpers.RequireSubjectName(context.User);
         var permission = requirement.Permission;
 
         // Resolve the queue address from the most recent processing attempt.
@@ -44,7 +45,8 @@ public sealed class FailedMessageAuthorizationHandler(
         if (string.IsNullOrEmpty(queueAddress))
         {
             auditLog.Decision(
-                subject,
+                subjectId,
+                subjectName,
                 permission,
                 resource: null,
                 allowed: false,
@@ -52,7 +54,7 @@ public sealed class FailedMessageAuthorizationHandler(
 
             context.Fail(new AuthorizationFailureReason(
                 this,
-                $"User '{subject}' cannot '{permission}': message has no resolvable queue address"));
+                $"User '{subjectId}' cannot '{permission}': message has no resolvable queue address"));
 
             return Task.CompletedTask;
         }
@@ -61,7 +63,8 @@ public sealed class FailedMessageAuthorizationHandler(
         if (!permissionEvaluator.IsInScope(context.User, permission, queueAddress))
         {
             auditLog.Decision(
-                subject,
+                subjectId,
+                subjectName,
                 permission,
                 resource: queueAddress,
                 allowed: false,
@@ -69,13 +72,14 @@ public sealed class FailedMessageAuthorizationHandler(
 
             context.Fail(new AuthorizationFailureReason(
                 this,
-                $"User '{subject}' cannot '{permission}' on queue '{queueAddress}' — out of scope"));
+                $"User '{subjectId}' cannot '{permission}' on queue '{queueAddress}' — out of scope"));
 
             return Task.CompletedTask;
         }
 
         auditLog.Decision(
-            subject,
+            subjectId,
+            subjectName,
             permission,
             resource: queueAddress,
             allowed: true,

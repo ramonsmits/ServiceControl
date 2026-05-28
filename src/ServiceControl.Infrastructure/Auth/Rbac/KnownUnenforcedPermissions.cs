@@ -13,8 +13,9 @@ using System.Collections.Generic;
 /// to <see cref="Permissions"/>, add it here until enforcement is implemented.
 /// </para>
 /// <para>
-/// <b>On <c>tf3651-authz-base</c>:</b> no Phase 1 enforcement exists yet, so every constant
-/// except the wildcard (<c>*</c>) is listed here.
+/// <b>On <c>tf3651-authz-s3</c>:</b> Phase 1 enforcement is active for <c>messages:*</c> and
+/// <c>recoverabilitygroups:*</c> — those constants are no longer in this set.
+/// All other catalogue constants remain unenforced pending later phases.
 /// </para>
 /// </summary>
 public static class KnownUnenforcedPermissions
@@ -25,19 +26,6 @@ public static class KnownUnenforcedPermissions
     /// </summary>
     public static readonly IReadOnlySet<string> Set = new HashSet<string>
     {
-        // Messages area — enforcement planned in Phase 1 (S2/S3/S4)
-        Permissions.MessagesView,
-        Permissions.MessagesRetry,
-        Permissions.MessagesArchive,
-        Permissions.MessagesUnarchive,
-        Permissions.MessagesEdit,
-
-        // Recoverability groups area — enforcement planned in Phase 1 (S2/S3/S4)
-        Permissions.RecoverabilityGroupsView,
-        Permissions.RecoverabilityGroupsRetry,
-        Permissions.RecoverabilityGroupsArchive,
-        Permissions.RecoverabilityGroupsUnarchive,
-
         // Endpoints area — enforcement planned in a later phase
         Permissions.EndpointsView,
         Permissions.EndpointsManage,

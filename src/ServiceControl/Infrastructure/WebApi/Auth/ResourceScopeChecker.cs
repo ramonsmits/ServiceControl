@@ -51,13 +51,15 @@ public sealed class ResourceScopeChecker(
         string? queueAddress,
         HttpContext context)
     {
-        var subject = AuthorizationHelpers.GetSubject(user);
+        var subjectId = AuthorizationHelpers.RequireSubjectId(user);
+        var subjectName = AuthorizationHelpers.RequireSubjectName(user);
 
         // Fail closed: a resource with no resolvable queue address cannot be scope-checked.
         if (string.IsNullOrEmpty(queueAddress))
         {
             auditLog.Decision(
-                subject,
+                subjectId,
+                subjectName,
                 permission,
                 resource: null,
                 allowed: false,
@@ -71,7 +73,8 @@ public sealed class ResourceScopeChecker(
         if (!permissionEvaluator.IsInScope(user, permission, queueAddress))
         {
             auditLog.Decision(
-                subject,
+                subjectId,
+                subjectName,
                 permission,
                 resource: queueAddress,
                 allowed: false,
@@ -82,7 +85,8 @@ public sealed class ResourceScopeChecker(
         }
 
         auditLog.Decision(
-            subject,
+            subjectId,
+            subjectName,
             permission,
             resource: queueAddress,
             allowed: true,

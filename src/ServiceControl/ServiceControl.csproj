@@ -38,12 +38,14 @@
     <PackageReference Include="NServiceBus.Extensions.Logging" />
     <PackageReference Include="Particular.ServicePulse.Core" />
     <PackageReference Include="ServiceControl.Contracts" />
+    <PackageReference Include="Casbin.NET" />
     <PackageReference Include="Yarp.ReverseProxy" />
   </ItemGroup>
 
   <ItemGroup>
     <None Remove="Hosting\Help.txt" />
     <EmbeddedResource Include="Hosting\Help.txt" />
+    <EmbeddedResource Include="rbac.model.conf" />
   </ItemGroup>
 
   <ItemGroup>

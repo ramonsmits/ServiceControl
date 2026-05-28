@@ -104,13 +104,12 @@
         [HttpGet]
         public async Task<IActionResult> GetGroupErrors(string groupId, [FromQuery] SortInfo sortInfo, [FromQuery] PagingInfo pagingInfo, string status = default, string modified = default)
         {
-            var scopeDenied = await EnforceGroupScopeAsync(groupId, Permissions.RecoverabilityGroupsView);
-            if (scopeDenied != null)
-            {
-                return scopeDenied;
-            }
+            // R1: resolve the caller's permitted queue scope and push it into the query before paging,
+            // so that Total-Count reflects only messages the caller is allowed to see.
+            // Null means unrestricted (admin / no scoped grants).
+            var queueScope = permissionEvaluator.ResolveQueueScope(User, Permissions.RecoverabilityGroupsView);
 
-            var results = await store.GetGroupErrors(groupId, status, modified, sortInfo, pagingInfo);
+            var results = await store.GetGroupErrors(groupId, status, modified, sortInfo, pagingInfo, queueScope);
 
             Response.WithQueryStatsAndPagingInfo(results.QueryStats, pagingInfo);
             return Ok(results.Results);

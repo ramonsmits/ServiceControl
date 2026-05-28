@@ -58,7 +58,7 @@
         // FailureGroupsController
         Task EditComment(string groupId, string comment);
         Task DeleteComment(string groupId);
-        Task<QueryResult<IList<FailedMessageView>>> GetGroupErrors(string groupId, string status, string modified, SortInfo sortInfo, PagingInfo pagingInfo);
+        Task<QueryResult<IList<FailedMessageView>>> GetGroupErrors(string groupId, string status, string modified, SortInfo sortInfo, PagingInfo pagingInfo, ResourceScope? queueScope = null);
         Task<QueryStatsInfo> GetGroupErrorsCount(string groupId, string status, string modified);
 
         Task<QueryResult<IList<FailureGroupView>>> GetGroup(string groupId, string status, string modified);

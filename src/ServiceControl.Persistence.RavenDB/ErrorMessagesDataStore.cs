@@ -418,7 +418,8 @@
             string status,
             string modified,
             SortInfo sortInfo,
-            PagingInfo pagingInfo
+            PagingInfo pagingInfo,
+            ResourceScope? queueScope = null
             )
         {
             using var session = await sessionProvider.OpenSession();
@@ -428,6 +429,7 @@
                 .WhereEquals(view => view.FailureGroupId, groupId)
                 .FilterByStatusWhere(status)
                 .FilterByLastModifiedRange(modified)
+                .FilterByQueueScope(queueScope)
                 .Sort(sortInfo)
                 .Paging(pagingInfo)
                 .SelectFields<FailedMessage>()

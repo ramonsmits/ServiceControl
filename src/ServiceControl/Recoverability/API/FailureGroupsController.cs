@@ -23,7 +23,6 @@
         IPermissionEvaluator permissionEvaluator)
         : ControllerBase
     {
-        [RequirePermission(Permissions.RecoverabilityGroupsView)]
         [Authorize(Policy = Permissions.RecoverabilityGroupsView)]
         [Route("recoverability/classifiers")]
         [HttpGet]
@@ -39,7 +38,6 @@
             return result;
         }
 
-        [RequirePermission(Permissions.RecoverabilityGroupsView)]
         [Authorize(Policy = Permissions.RecoverabilityGroupsView)]
         [Route("recoverability/groups/{groupId:required:minlength(1)}/comment")]
         [HttpPost]
@@ -50,7 +48,6 @@
             return Accepted();
         }
 
-        [RequirePermission(Permissions.RecoverabilityGroupsView)]
         [Authorize(Policy = Permissions.RecoverabilityGroupsView)]
         [Route("recoverability/groups/{groupId:required:minlength(1)}/comment")]
         [HttpDelete]
@@ -61,7 +58,6 @@
             return Accepted();
         }
 
-        [RequirePermission(Permissions.RecoverabilityGroupsView)]
         [Authorize(Policy = Permissions.RecoverabilityGroupsView)]
         [Route("recoverability/groups/{classifier?}")]
         [HttpGet]
@@ -77,7 +73,6 @@
             return results;
         }
 
-        [RequirePermission(Permissions.RecoverabilityGroupsView)]
         [Authorize(Policy = Permissions.RecoverabilityGroupsView)]
         [Route("recoverability/groups/{groupId:required:minlength(1)}/errors")]
         [HttpGet]
@@ -93,7 +88,6 @@
             return results.Results;
         }
 
-        [RequirePermission(Permissions.RecoverabilityGroupsView)]
         [Authorize(Policy = Permissions.RecoverabilityGroupsView)]
         [Route("recoverability/groups/{groupId:required:minlength(1)}/errors")]
         [HttpHead]
@@ -104,7 +98,6 @@
             Response.WithQueryStatsInfo(results);
         }
 
-        [RequirePermission(Permissions.RecoverabilityGroupsView)]
         [Authorize(Policy = Permissions.RecoverabilityGroupsView)]
         [Route("recoverability/history")]
         [HttpGet]
@@ -117,7 +110,6 @@
             return retryHistory;
         }
 
-        [RequirePermission(Permissions.RecoverabilityGroupsView)]
         [Authorize(Policy = Permissions.RecoverabilityGroupsView)]
         [Route("recoverability/groups/id/{groupId:required:minlength(1)}")]
         [HttpGet]

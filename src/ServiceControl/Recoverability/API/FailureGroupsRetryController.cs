@@ -20,7 +20,6 @@ namespace ServiceControl.Recoverability.API
         IErrorMessageDataStore store,
         IAuthorizationService authorizationService) : ControllerBase
     {
-        [RequirePermission(Permissions.RecoverabilityGroupsRetry)]
         [Authorize(Policy = Permissions.RecoverabilityGroupsRetry)]
         [Route("recoverability/groups/{groupId:required:minlength(1)}/errors/retry")]
         [HttpPost]

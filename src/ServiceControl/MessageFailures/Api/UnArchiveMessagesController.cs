@@ -16,7 +16,6 @@
     [Route("api")]
     public class UnArchiveMessagesController(IMessageSession session) : ControllerBase
     {
-        [RequirePermission(Permissions.MessagesUnarchive)]
         [Authorize(Policy = Permissions.MessagesUnarchive)]
         [Route("errors/unarchive")]
         [HttpPatch]
@@ -34,7 +33,6 @@
             return Accepted();
         }
 
-        [RequirePermission(Permissions.MessagesUnarchive)]
         [Authorize(Policy = Permissions.MessagesUnarchive)]
         [Route("errors/{from}...{to}/unarchive")]
         [HttpPatch]

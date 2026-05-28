@@ -16,7 +16,6 @@
         IAuthorizationService authorizationService,
         IPermissionEvaluator permissionEvaluator) : ControllerBase
     {
-        [RequirePermission(Permissions.MessagesView)]
         [Authorize(Policy = Permissions.MessagesView)]
         [Route("errors/{failedMessageId:required:minlength(1)}")]
         [HttpGet]
@@ -48,7 +47,6 @@
             return result;
         }
 
-        [RequirePermission(Permissions.MessagesView)]
         [Authorize(Policy = Permissions.MessagesView)]
         [Route("errors/last/{failedMessageId:required:minlength(1)}")]
         [HttpGet]

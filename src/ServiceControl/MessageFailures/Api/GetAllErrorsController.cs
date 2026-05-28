@@ -15,7 +15,6 @@
         IErrorMessageDataStore store,
         IPermissionEvaluator permissionEvaluator) : ControllerBase
     {
-        [RequirePermission(Permissions.MessagesView)]
         [Authorize(Policy = Permissions.MessagesView)]
         [Route("errors")]
         [HttpGet]
@@ -40,7 +39,6 @@
             return results.Results;
         }
 
-        [RequirePermission(Permissions.MessagesView)]
         [Authorize(Policy = Permissions.MessagesView)]
         [Route("errors")]
         [HttpHead]
@@ -55,7 +53,6 @@
             Response.WithQueryStatsInfo(queryResult);
         }
 
-        [RequirePermission(Permissions.MessagesView)]
         [Authorize(Policy = Permissions.MessagesView)]
         [Route("endpoints/{endpointname}/errors")]
         [HttpGet]
@@ -79,7 +76,6 @@
             return results.Results;
         }
 
-        [RequirePermission(Permissions.MessagesView)]
         [Authorize(Policy = Permissions.MessagesView)]
         [Route("errors/summary")]
         [HttpGet]

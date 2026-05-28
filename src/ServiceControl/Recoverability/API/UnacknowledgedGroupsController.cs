@@ -13,7 +13,6 @@
     [Route("api")]
     public class UnacknowledgedGroupsController(IRetryHistoryDataStore retryStore, IArchiveMessages archiver) : ControllerBase
     {
-        [RequirePermission(Permissions.RecoverabilityGroupsView)]
         [Authorize(Policy = Permissions.RecoverabilityGroupsView)]
         [Route("recoverability/unacknowledgedgroups/{groupId:required:minlength(1)}")]
         [HttpDelete]

@@ -45,7 +45,7 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
             // Endpoints below lack [Authorize(Policy=X)] / [AuthenticatedOnly] / [AllowAnonymous]:
 
             // Pending retries GET — no MVC controller action exists (YARP-forwarded proxy routes);
-            // not wirable via [RequirePermission], left in baseline until routing is reworked.
+            // not wirable via [Authorize(Policy=X)], left in baseline until routing is reworked.
             "GET api/pendingretries",
             "GET api/pendingretries/{queue}",
 

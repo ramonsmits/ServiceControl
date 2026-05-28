@@ -27,13 +27,11 @@
         ILogger<EditFailedMessagesController> logger)
         : ControllerBase
     {
-        [RequirePermission(Permissions.MessagesEdit)]
         [Authorize(Policy = Permissions.MessagesEdit)]
         [Route("edit/config")]
         [HttpGet]
         public EditConfigurationModel Config() => GetEditConfiguration();
 
-        [RequirePermission(Permissions.MessagesEdit)]
         [Authorize(Policy = Permissions.MessagesEdit)]
         [Route("edit/{failedMessageId:required:minlength(1)}")]
         [HttpPost]

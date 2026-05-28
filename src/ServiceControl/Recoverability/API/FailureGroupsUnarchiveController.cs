@@ -20,7 +20,6 @@
         IErrorMessageDataStore store,
         IAuthorizationService authorizationService) : ControllerBase
     {
-        [RequirePermission(Permissions.RecoverabilityGroupsUnarchive)]
         [Authorize(Policy = Permissions.RecoverabilityGroupsUnarchive)]
         [Route("recoverability/groups/{groupId:required:minlength(1)}/errors/unarchive")]
         [HttpPost]

@@ -62,6 +62,70 @@ public sealed class PermissionEvaluator(Func<RbacPolicy> policyFactory) : IPermi
     }
 
     /// <summary>
+    /// Returns true if the user holds at least one unrestricted (null-scope) grant for the given permission.
+    /// A wildcard (<c>*</c>) permission satisfies any permission name.
+    /// </summary>
+    public bool HasUnrestrictedGrant(ClaimsPrincipal user, string permission)
+    {
+        var policy = policyFactory();
+        foreach (var role in MatchingRoles(user, policy))
+        {
+            foreach (var grant in role.Permissions)
+            {
+                if (GrantMatchesPermission(grant, permission) && grant.Scope == null)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Returns the resolved queue scope for the user's grants for the given permission,
+    /// or <see langword="null"/> if the user has an unrestricted grant (null-scope or wildcard).
+    /// Used by the data layer to push scope filtering into the query before paging.
+    /// If the user has multiple scoped grants, their allow patterns are combined (union of allow, union of deny).
+    /// </summary>
+    public ResourceScope? ResolveQueueScope(ClaimsPrincipal user, string permission)
+    {
+        var policy = policyFactory();
+        var allowPatterns = new List<string>();
+        var denyPatterns = new List<string>();
+        var hasAnyGrant = false;
+
+        foreach (var role in MatchingRoles(user, policy))
+        {
+            foreach (var grant in role.Permissions)
+            {
+                if (!GrantMatchesPermission(grant, permission))
+                {
+                    continue;
+                }
+
+                hasAnyGrant = true;
+
+                // Unrestricted grant: no scope filter needed
+                if (grant.Scope == null)
+                {
+                    return null;
+                }
+
+                allowPatterns.AddRange(grant.Scope.Allow);
+                denyPatterns.AddRange(grant.Scope.Deny);
+            }
+        }
+
+        if (!hasAnyGrant)
+        {
+            // No grant at all — deny everything (fail closed)
+            return new ResourceScope([], []);
+        }
+
+        return new ResourceScope(allowPatterns, denyPatterns);
+    }
+
+    /// <summary>
     /// Resolves the full set of effective permissions for the user based on their claims
     /// and the current RBAC policy. Identical grants (same permission AND same scope) from
     /// multiple matching roles are deduplicated — a user in two roles that both grant

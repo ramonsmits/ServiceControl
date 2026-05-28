@@ -7,6 +7,7 @@
     using Infrastructure;
     using MessageFailures.Api;
     using ServiceControl.EventLog;
+    using ServiceControl.Infrastructure.Auth.Rbac;
     using ServiceControl.MessageFailures;
     using ServiceControl.Operations;
     using ServiceControl.Recoverability;
@@ -26,9 +27,22 @@
         Task<IList<FailureGroupView>> GetFailureGroupsByClassifier(string classifier);
 
         // GetAllErrorsController
-        Task<QueryResult<IList<FailedMessageView>>> ErrorGet(string status, string modified, string queueAddress, PagingInfo pagingInfo, SortInfo sortInfo);
+        /// <summary>
+        /// Returns a paged list of failed messages, optionally filtered to the caller's permitted queue scope.
+        /// <para>
+        /// <paramref name="queueScope"/> is resolved by the controller from the caller's effective RBAC grants
+        /// (via <see cref="IPermissionEvaluator.ResolveQueueScope"/>) and pushed into the query <em>before</em>
+        /// paging so that the <c>Total-Count</c> header reflects only messages the caller is allowed to see.
+        /// Pass <see langword="null"/> for unrestricted (admin) access.
+        /// </para>
+        /// </summary>
+        Task<QueryResult<IList<FailedMessageView>>> ErrorGet(string status, string modified, string queueAddress, PagingInfo pagingInfo, SortInfo sortInfo, ResourceScope? queueScope = null);
         Task<QueryStatsInfo> ErrorsHead(string status, string modified, string queueAddress);
-        Task<QueryResult<IList<FailedMessageView>>> ErrorsByEndpointName(string status, string endpointName, string modified, PagingInfo pagingInfo, SortInfo sortInfo);
+        /// <summary>
+        /// Returns a paged list of failed messages for the specified endpoint, optionally filtered to
+        /// the caller's permitted queue scope — same semantics as <see cref="ErrorGet"/>.
+        /// </summary>
+        Task<QueryResult<IList<FailedMessageView>>> ErrorsByEndpointName(string status, string endpointName, string modified, PagingInfo pagingInfo, SortInfo sortInfo, ResourceScope? queueScope = null);
         Task<IDictionary<string, object>> ErrorsSummary();
 
         // GetErrorByIdController

@@ -25,18 +25,12 @@ public static class KnownUnenforcedPermissions
     /// </summary>
     public static readonly IReadOnlySet<string> Set = new HashSet<string>
     {
-        // Messages area — enforcement planned in Phase 1 (S2/S3/S4)
-        // MessagesRetry is enforced on the S4 branch by [Authorize(Policy=...)] + CasbinResourceScopeChecker.
-        Permissions.MessagesView,
-        Permissions.MessagesArchive,
-        Permissions.MessagesUnarchive,
-        Permissions.MessagesEdit,
+        // Messages area — all enforced in Phase 1 S4
+        // MessagesView, MessagesRetry, MessagesArchive, MessagesUnarchive, MessagesEdit — wired
 
-        // Recoverability groups area — enforcement planned in Phase 1 (S2/S3/S4)
-        Permissions.RecoverabilityGroupsView,
-        Permissions.RecoverabilityGroupsRetry,
-        Permissions.RecoverabilityGroupsArchive,
-        Permissions.RecoverabilityGroupsUnarchive,
+        // Recoverability groups area — all enforced in Phase 1 S4
+        // RecoverabilityGroupsView, RecoverabilityGroupsRetry, RecoverabilityGroupsArchive,
+        // RecoverabilityGroupsUnarchive — wired
 
         // Endpoints area — enforcement planned in a later phase
         Permissions.EndpointsView,

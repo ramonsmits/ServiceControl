@@ -219,7 +219,9 @@ namespace ServiceControl.Persistence
         /// messages the caller is allowed to see, not the unfiltered total.
         /// </para>
         /// </summary>
+#nullable enable
         public static IAsyncDocumentQuery<T> FilterByQueueScope<T>(this IAsyncDocumentQuery<T> source, ResourceScope? scope)
+#nullable restore
         {
             // Null scope = unrestricted user — no filter.
             if (scope == null)

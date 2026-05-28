@@ -36,13 +36,17 @@
         /// Pass <see langword="null"/> for unrestricted (admin) access.
         /// </para>
         /// </summary>
+#nullable enable
         Task<QueryResult<IList<FailedMessageView>>> ErrorGet(string status, string modified, string queueAddress, PagingInfo pagingInfo, SortInfo sortInfo, ResourceScope? queueScope = null);
+#nullable restore
         Task<QueryStatsInfo> ErrorsHead(string status, string modified, string queueAddress);
         /// <summary>
         /// Returns a paged list of failed messages for the specified endpoint, optionally filtered to
         /// the caller's permitted queue scope — same semantics as <see cref="ErrorGet"/>.
         /// </summary>
+#nullable enable
         Task<QueryResult<IList<FailedMessageView>>> ErrorsByEndpointName(string status, string endpointName, string modified, PagingInfo pagingInfo, SortInfo sortInfo, ResourceScope? queueScope = null);
+#nullable restore
         Task<IDictionary<string, object>> ErrorsSummary();
 
         // GetErrorByIdController
@@ -58,7 +62,9 @@
         // FailureGroupsController
         Task EditComment(string groupId, string comment);
         Task DeleteComment(string groupId);
+#nullable enable
         Task<QueryResult<IList<FailedMessageView>>> GetGroupErrors(string groupId, string status, string modified, SortInfo sortInfo, PagingInfo pagingInfo, ResourceScope? queueScope = null);
+#nullable restore
         Task<QueryStatsInfo> GetGroupErrorsCount(string groupId, string status, string modified);
 
         Task<QueryResult<IList<FailureGroupView>>> GetGroup(string groupId, string status, string modified);

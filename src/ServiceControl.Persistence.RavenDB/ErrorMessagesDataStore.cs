@@ -211,6 +211,7 @@
             return results;
         }
 
+#nullable enable
         public async Task<QueryResult<IList<FailedMessageView>>> ErrorGet(
             string status,
             string modified,
@@ -219,6 +220,7 @@
             SortInfo sortInfo,
             ResourceScope? queueScope = null
             )
+#nullable restore
         {
             using var session = await sessionProvider.OpenSession();
             var query = session.Advanced
@@ -257,6 +259,7 @@
             return stats.ToQueryStatsInfo();
         }
 
+#nullable enable
         public async Task<QueryResult<IList<FailedMessageView>>> ErrorsByEndpointName(
             string status,
             string endpointName,
@@ -265,6 +268,7 @@
             SortInfo sortInfo,
             ResourceScope? queueScope = null
             )
+#nullable restore
         {
             using var session = await sessionProvider.OpenSession();
             var query = session.Advanced
@@ -413,6 +417,7 @@
             await session.SaveChangesAsync();
         }
 
+#nullable enable
         public async Task<QueryResult<IList<FailedMessageView>>> GetGroupErrors(
             string groupId,
             string status,
@@ -421,6 +426,7 @@
             PagingInfo pagingInfo,
             ResourceScope? queueScope = null
             )
+#nullable restore
         {
             using var session = await sessionProvider.OpenSession();
             var query = session.Advanced

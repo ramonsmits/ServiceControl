@@ -27,10 +27,10 @@
         : ControllerBase
     {
         /// <summary>
-        /// Returns the edit configuration. Authenticated users (any role) may view this;
-        /// no specific permission is required beyond being logged in.
+        /// Returns the edit configuration. Requires the <c>messages:edit</c> permission,
+        /// consistent with S2/S3 for cross-variant parity.
         /// </summary>
-        [AuthenticatedOnly]
+        [Authorize(Policy = Permissions.MessagesEdit)]
         [Route("edit/config")]
         [HttpGet]
         public EditConfigurationModel Config() => GetEditConfiguration();

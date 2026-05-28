@@ -2,6 +2,7 @@
 namespace ServiceControl.Infrastructure.WebApi.Auth;
 
 using System;
+using System.Security.Claims;
 using Casbin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,8 +55,10 @@ public static class S4AuthorizationExtensions
         if (!oidcSettings.Enabled)
         {
             // OIDC disabled: register allow-all surrogates so controllers that call
-            // ICasbinResourceScopeChecker.EnforceAsync unconditionally pass.
+            // ICasbinResourceScopeChecker.EnforceAsync unconditionally pass, and
+            // IPermissionEvaluator resolves without error for controllers that inject it.
             services.AddSingleton<ICasbinResourceScopeChecker, AllowAllScopeChecker>();
+            services.AddSingleton<IPermissionEvaluator, AllowAllPermissionEvaluator>();
             return;
         }
 
@@ -73,5 +76,23 @@ public static class S4AuthorizationExtensions
 
         // Resource-scope checker: called explicitly by controllers after loading the resource.
         services.AddSingleton<ICasbinResourceScopeChecker, CasbinResourceScopeChecker>();
+    }
+
+    /// <summary>
+    /// A no-op <see cref="IPermissionEvaluator"/> that always allows access.
+    /// Registered when OIDC is disabled to preserve the pre-RBAC behaviour.
+    /// <para>
+    /// <see cref="ResolveQueueScope"/> returns <see langword="null"/> (unrestricted — no filter),
+    /// and <see cref="HasUnrestrictedGrant"/> returns <see langword="true"/>,
+    /// so no queue-scope filtering is applied and no fail-closed logic triggers.
+    /// </para>
+    /// </summary>
+    sealed class AllowAllPermissionEvaluator : IPermissionEvaluator
+    {
+        public bool HasPermission(ClaimsPrincipal user, string permission) => true;
+        public bool IsInScope(ClaimsPrincipal user, string permission, string resource) => true;
+        public bool HasUnrestrictedGrant(ClaimsPrincipal user, string permission) => true;
+        public ResourceScope? ResolveQueueScope(ClaimsPrincipal user, string permission) => null;
+        public EffectivePermissions Resolve(ClaimsPrincipal user) => new([]);
     }
 }

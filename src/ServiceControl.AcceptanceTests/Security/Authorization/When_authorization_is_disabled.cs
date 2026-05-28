@@ -51,7 +51,8 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
                 })
                 .Run();
 
-            OpenIdConnectAssertions.AssertNoAuthenticationRequired(response);
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK),
+                "With OIDC disabled, /api/errors should return exactly 200 OK, not any error status (a 500 would indicate DI resolution failure)");
         }
 
         [Test]

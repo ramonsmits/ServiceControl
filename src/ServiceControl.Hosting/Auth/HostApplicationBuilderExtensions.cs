@@ -36,9 +36,9 @@
                     ValidateLifetime = oidcSettings.ValidateLifetime,
                     ValidateIssuerSigningKey = oidcSettings.ValidateIssuerSigningKey,
                     ValidAudience = oidcSettings.Audience,
-                    ClockSkew = TimeSpan.FromMinutes(5) // Allow 5 minutes clock skew
+                    ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew
+                    NameClaimType = oidcSettings.SubjectDisplayClaim
                 };
-                options.TokenValidationParameters.NameClaimType = oidcSettings.SubjectDisplayClaim;
                 options.RequireHttpsMetadata = oidcSettings.RequireHttpsMetadata;
                 // Don't map inbound claims to legacy Microsoft claim types
                 options.MapInboundClaims = false;

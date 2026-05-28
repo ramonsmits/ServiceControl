@@ -66,13 +66,15 @@ public sealed class CasbinResourceScopeChecker(
         string? queueAddress,
         HttpContext httpContext)
     {
-        var subject = AuthorizationHelpers.GetSubject(user);
+        var subjectId = AuthorizationHelpers.RequireSubjectId(user);
+        var subjectName = AuthorizationHelpers.RequireSubjectName(user);
 
         // Fail closed: no resolvable queue address means we cannot scope-check.
         if (string.IsNullOrEmpty(queueAddress))
         {
             auditLog.Decision(
-                subject,
+                subjectId,
+                subjectName,
                 permission,
                 resource: null,
                 allowed: false,
@@ -91,7 +93,8 @@ public sealed class CasbinResourceScopeChecker(
         if (allowed)
         {
             auditLog.Decision(
-                subject,
+                subjectId,
+                subjectName,
                 permission,
                 resource: queueAddress,
                 allowed: true,
@@ -102,7 +105,8 @@ public sealed class CasbinResourceScopeChecker(
         else
         {
             auditLog.Decision(
-                subject,
+                subjectId,
+                subjectName,
                 permission,
                 resource: queueAddress,
                 allowed: false,

@@ -48,7 +48,16 @@ public sealed class CasbinPermissionVerbHandler(
             return Task.CompletedTask;
         }
 
-        var subject = AuthorizationHelpers.GetSubject(context.User);
+        // If the user is not authenticated, do not log a decision — the fallback policy
+        // (RequireAuthenticatedUser) will produce the 401. Logging here would throw because
+        // sub and display-name claims are absent for anonymous principals.
+        if (context.User.Identity?.IsAuthenticated != true)
+        {
+            return Task.CompletedTask;
+        }
+
+        var subjectId = AuthorizationHelpers.RequireSubjectId(context.User);
+        var subjectName = AuthorizationHelpers.RequireSubjectName(context.User);
         var permission = requirement.Permission;
 
         // Get the user's Casbin subjects from their role claims.
@@ -67,7 +76,8 @@ public sealed class CasbinPermissionVerbHandler(
         if (holdsPermission)
         {
             auditLog.Decision(
-                subject,
+                subjectId,
+                subjectName,
                 permission,
                 resource: null,
                 allowed: true,
@@ -78,7 +88,8 @@ public sealed class CasbinPermissionVerbHandler(
         else
         {
             auditLog.Decision(
-                subject,
+                subjectId,
+                subjectName,
                 permission,
                 resource: null,
                 allowed: false,
@@ -86,7 +97,7 @@ public sealed class CasbinPermissionVerbHandler(
 
             context.Fail(new AuthorizationFailureReason(
                 this,
-                $"User '{subject}' does not hold permission '{permission}' (Casbin)"));
+                $"User '{subjectId}' does not hold permission '{permission}' (Casbin)"));
         }
 
         return Task.CompletedTask;

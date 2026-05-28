@@ -1,6 +1,7 @@
 #nullable enable
 namespace ServiceControl.Infrastructure.WebApi.Auth;
 
+using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -12,13 +13,29 @@ using Microsoft.AspNetCore.Http;
 public static class AuthorizationHelpers
 {
     /// <summary>
-    /// Extracts a human-readable subject identifier from the principal.
-    /// Prefers the <c>sub</c> claim; falls back to <see cref="System.Security.Principal.IIdentity.Name"/>; then "unknown".
+    /// Returns the stable subject identifier from the <c>sub</c> claim.
+    /// Throws <see cref="InvalidOperationException"/> if the claim is absent — this is intentional
+    /// fail-fast behaviour: a JWT without a <c>sub</c> claim is malformed and should never reach
+    /// the authorization layer.
     /// </summary>
-    public static string GetSubject(ClaimsPrincipal user) =>
+    public static string RequireSubjectId(ClaimsPrincipal user) =>
         user.FindFirst("sub")?.Value
-        ?? user.Identity?.Name
-        ?? "unknown";
+        ?? throw new InvalidOperationException("Missing 'sub' claim on principal. The JWT must carry a non-empty 'sub' claim.");
+
+    /// <summary>
+    /// Returns the human-readable display name from <see cref="System.Security.Principal.IIdentity.Name"/>
+    /// (which is set to the configured <c>SubjectDisplayClaim</c> value by JwtBearer's
+    /// <c>NameClaimType</c> wiring).
+    /// Throws <see cref="InvalidOperationException"/> if the value is absent or empty — this confirms
+    /// that the IdP is emitting the required display claim.
+    /// </summary>
+    public static string RequireSubjectName(ClaimsPrincipal user)
+    {
+        var name = user.Identity?.Name;
+        return !string.IsNullOrEmpty(name)
+            ? name
+            : throw new InvalidOperationException("Missing display-name claim on principal. Ensure the IdP emits the claim configured as Authentication.SubjectDisplayClaim (default: preferred_username).");
+    }
 
     /// <summary>
     /// Writes a structured JSON 403 body to the HTTP response.

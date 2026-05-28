@@ -7,6 +7,7 @@ namespace ServiceControl.CompositeViews.Messages
     using Api.Contracts;
     using Infrastructure.WebApi;
     using MessageCounting;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Http.Extensions;
     using Microsoft.AspNetCore.Mvc;
@@ -14,6 +15,7 @@ namespace ServiceControl.CompositeViews.Messages
     using Operations.BodyStorage;
     using Persistence.Infrastructure;
     using ServiceBus.Management.Infrastructure.Settings;
+    using ServiceControl.Infrastructure.Auth.Rbac;
     using Yarp.ReverseProxy.Forwarder;
 
     // All routes matching `messages/*` must be in this controller as WebAPI cannot figure out the overlapping routes
@@ -33,6 +35,7 @@ namespace ServiceControl.CompositeViews.Messages
         ILogger<GetMessagesController> logger)
         : ControllerBase
     {
+        [Authorize(Policy = Permissions.MessagesView)]
         [Route("messages")]
         [HttpGet]
         public async Task<IList<MessagesView>> Messages([FromQuery] PagingInfo pagingInfo,
@@ -48,6 +51,7 @@ namespace ServiceControl.CompositeViews.Messages
             return result.Results;
         }
 
+        [Authorize(Policy = Permissions.MessagesView)]
         [Route("endpoints/{endpoint}/messages")]
         [HttpGet]
         public async Task<IList<MessagesView>> MessagesForEndpoint([FromQuery] PagingInfo pagingInfo,
@@ -64,6 +68,7 @@ namespace ServiceControl.CompositeViews.Messages
         }
 
         // the endpoint name is needed in the route to match the route and forward it as path and query to the remotes
+        [Authorize(Policy = Permissions.MessagesView)]
         [Route("endpoints/{endpoint}/audit-count")]
         [HttpGet]
         public async Task<IList<AuditCount>> GetEndpointAuditCounts([FromQuery] PagingInfo pagingInfo, string endpoint)
@@ -75,6 +80,7 @@ namespace ServiceControl.CompositeViews.Messages
             return result.Results;
         }
 
+        [Authorize(Policy = Permissions.MessagesView)]
         [Route("messages/{id}/body")]
         [HttpGet]
         public async Task<IActionResult> Get(string id, [FromQuery(Name = "instance_id")] string instanceId)
@@ -114,6 +120,7 @@ namespace ServiceControl.CompositeViews.Messages
             return Empty;
         }
 
+        [Authorize(Policy = Permissions.MessagesView)]
         [Route("messages/search")]
         [HttpGet]
         public async Task<IList<MessagesView>> Search([FromQuery] PagingInfo pagingInfo, [FromQuery] SortInfo sortInfo,
@@ -126,6 +133,7 @@ namespace ServiceControl.CompositeViews.Messages
             return result.Results;
         }
 
+        [Authorize(Policy = Permissions.MessagesView)]
         [Route("messages/search/{keyword}")]
         [HttpGet]
         public async Task<IList<MessagesView>> SearchByKeyWord([FromQuery] PagingInfo pagingInfo,
@@ -139,6 +147,7 @@ namespace ServiceControl.CompositeViews.Messages
             return result.Results;
         }
 
+        [Authorize(Policy = Permissions.MessagesView)]
         [Route("endpoints/{endpoint}/messages/search")]
         [HttpGet]
         public async Task<IList<MessagesView>> Search([FromQuery] PagingInfo pagingInfo, [FromQuery] SortInfo sortInfo,
@@ -151,6 +160,7 @@ namespace ServiceControl.CompositeViews.Messages
             return result.Results;
         }
 
+        [Authorize(Policy = Permissions.MessagesView)]
         [Route("endpoints/{endpoint}/messages/search/{keyword}")]
         [HttpGet]
         public async Task<IList<MessagesView>> SearchByKeyword([FromQuery] PagingInfo pagingInfo,

@@ -87,6 +87,7 @@ namespace ServiceControl.MessageFailures.Api
             return Empty;
         }
 
+        [Authorize(Policy = Permissions.MessagesRetry)]
         [Route("errors/retry")]
         [HttpPost]
         public async Task<IActionResult> RetryAllBy(List<string> messageIds)
@@ -101,10 +102,23 @@ namespace ServiceControl.MessageFailures.Api
             return Accepted();
         }
 
+        [Authorize(Policy = Permissions.MessagesRetry)]
         [Route("errors/queues/{queueAddress:required:minlength(1)}/retry")]
         [HttpPost]
         public async Task<IActionResult> RetryAllBy(string queueAddress)
         {
+            // Resource-scope check: is this queue address in scope for the current user?
+            var scopeResult = await scopeChecker.EnforceAsync(
+                User,
+                Permissions.MessagesRetry,
+                queueAddress,
+                HttpContext);
+
+            if (scopeResult != null)
+            {
+                return scopeResult;
+            }
+
             await messageSession.SendLocal<RetryMessagesByQueueAddress>(m =>
             {
                 m.QueueAddress = queueAddress;
@@ -114,6 +128,7 @@ namespace ServiceControl.MessageFailures.Api
             return Accepted();
         }
 
+        [Authorize(Policy = Permissions.MessagesRetry)]
         [Route("errors/retry/all")]
         [HttpPost]
         public async Task<IActionResult> RetryAll()
@@ -123,6 +138,7 @@ namespace ServiceControl.MessageFailures.Api
             return Accepted();
         }
 
+        [Authorize(Policy = Permissions.MessagesRetry)]
         [Route("errors/{endpointName:required:minlength(1)}/retry/all")]
         [HttpPost]
         public async Task<IActionResult> RetryAllByEndpoint(string endpointName)

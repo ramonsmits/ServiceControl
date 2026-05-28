@@ -3,24 +3,35 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Infrastructure.WebApi;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Persistence.Infrastructure;
+    using ServiceControl.Infrastructure.Auth.Rbac;
     using ServiceControl.Persistence;
 
     [ApiController]
     [Route("api")]
-    public class GetAllErrorsController(IErrorMessageDataStore store) : ControllerBase
+    public class GetAllErrorsController(
+        IErrorMessageDataStore store,
+        IPermissionEvaluator permissionEvaluator) : ControllerBase
     {
+        [Authorize(Policy = Permissions.MessagesView)]
         [Route("errors")]
         [HttpGet]
         public async Task<IList<FailedMessageView>> ErrorsGet([FromQuery] PagingInfo pagingInfo, [FromQuery] SortInfo sortInfo, string status, string modified, string queueAddress)
         {
+            // R1: resolve the caller's permitted queue scope and push it into the query before paging
+            // so that Total-Count reflects only messages the caller is allowed to see.
+            // Null means unrestricted (admin / no scoped grants).
+            var queueScope = permissionEvaluator.ResolveQueueScope(User, Permissions.MessagesView);
+
             var results = await store.ErrorGet(
                     status: status,
                     modified: modified,
                     queueAddress: queueAddress,
                     pagingInfo,
-                    sortInfo
+                    sortInfo,
+                    queueScope
                     );
 
             Response.WithQueryStatsAndPagingInfo(results.QueryStats, pagingInfo);
@@ -28,6 +39,7 @@
             return results.Results;
         }
 
+        [Authorize(Policy = Permissions.MessagesView)]
         [Route("errors")]
         [HttpHead]
         public async Task ErrorsHead(string status, string modified, string queueAddress)
@@ -41,16 +53,21 @@
             Response.WithQueryStatsInfo(queryResult);
         }
 
+        [Authorize(Policy = Permissions.MessagesView)]
         [Route("endpoints/{endpointname}/errors")]
         [HttpGet]
         public async Task<IList<FailedMessageView>> ErrorsByEndpointName([FromQuery] PagingInfo pagingInfo, [FromQuery] SortInfo sortInfo, string status, string modified, string endpointName)
         {
+            // R1: same as ErrorsGet — scope filter before paging.
+            var queueScope = permissionEvaluator.ResolveQueueScope(User, Permissions.MessagesView);
+
             var results = await store.ErrorsByEndpointName(
                 status: status,
                 endpointName: endpointName,
                 modified: modified,
                 pagingInfo,
-                sortInfo
+                sortInfo,
+                queueScope
                 );
 
             Response.WithQueryStatsAndPagingInfo(results.QueryStats, pagingInfo);
@@ -58,6 +75,7 @@
             return results.Results;
         }
 
+        [Authorize(Policy = Permissions.MessagesView)]
         [Route("errors/summary")]
         [HttpGet]
         public async Task<IDictionary<string, object>> ErrorsSummary() => await store.ErrorsSummary();

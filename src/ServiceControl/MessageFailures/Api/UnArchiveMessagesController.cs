@@ -5,13 +5,16 @@
     using System.Linq;
     using System.Threading.Tasks;
     using InternalMessages;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using NServiceBus;
+    using ServiceControl.Infrastructure.Auth.Rbac;
 
     [ApiController]
     [Route("api")]
     public class UnArchiveMessagesController(IMessageSession session) : ControllerBase
     {
+        [Authorize(Policy = Permissions.MessagesUnarchive)]
         [Route("errors/unarchive")]
         [HttpPatch]
         public async Task<IActionResult> Unarchive(string[] ids)
@@ -28,6 +31,7 @@
             return Accepted();
         }
 
+        [Authorize(Policy = Permissions.MessagesUnarchive)]
         [Route("errors/{from}...{to}/unarchive")]
         [HttpPatch]
         public async Task<IActionResult> Unarchive(string from, string to)

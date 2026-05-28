@@ -5,12 +5,16 @@
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Logging;
     using NServiceBus;
     using Persistence;
     using Recoverability;
     using ServiceBus.Management.Infrastructure.Settings;
+    using ServiceControl.Infrastructure.Auth.Rbac;
+    using ServiceControl.Infrastructure.WebApi;
+    using ServiceControl.Infrastructure.WebApi.Auth;
 
     [ApiController]
     [Route("api")]
@@ -18,16 +22,23 @@
         Settings settings,
         IErrorMessageDataStore store,
         IMessageSession session,
+        ICasbinResourceScopeChecker scopeChecker,
         ILogger<EditFailedMessagesController> logger)
         : ControllerBase
     {
+        /// <summary>
+        /// Returns the edit configuration. Authenticated users (any role) may view this;
+        /// no specific permission is required beyond being logged in.
+        /// </summary>
+        [AuthenticatedOnly]
         [Route("edit/config")]
         [HttpGet]
         public EditConfigurationModel Config() => GetEditConfiguration();
 
+        [Authorize(Policy = Permissions.MessagesEdit)]
         [Route("edit/{failedMessageId:required:minlength(1)}")]
         [HttpPost]
-        public async Task<ActionResult<EditRetryResponse>> Edit(string failedMessageId, [FromBody] EditMessageModel edit)
+        public async Task<IActionResult> Edit(string failedMessageId, [FromBody] EditMessageModel edit)
         {
             if (!settings.AllowMessageEditing)
             {
@@ -51,6 +62,23 @@
             {
                 logger.LogWarning("The original failed message could not be loaded for id={FailedMessageId}", failedMessageId);
                 return BadRequest();
+            }
+
+            // Resource-scope check: is this message's queue address in scope for the current user?
+            var queueAddress = failedMessage.ProcessingAttempts
+                .LastOrDefault()
+                ?.FailureDetails
+                ?.AddressOfFailingEndpoint;
+
+            var scopeResult = await scopeChecker.EnforceAsync(
+                User,
+                Permissions.MessagesEdit,
+                queueAddress,
+                HttpContext);
+
+            if (scopeResult != null)
+            {
+                return scopeResult;
             }
 
             //WARN

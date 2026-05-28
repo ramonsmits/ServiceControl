@@ -43,6 +43,12 @@
         [HttpPost]
         public async Task<IActionResult> EditComment(string groupId, string comment)
         {
+            var denied = await EnforceGroupScopeAsync(groupId, Permissions.RecoverabilityGroupsView);
+            if (denied != null)
+            {
+                return denied;
+            }
+
             await store.EditComment(groupId, comment);
 
             return Accepted();
@@ -53,10 +59,31 @@
         [HttpDelete]
         public async Task<IActionResult> DeleteComment(string groupId)
         {
+            var denied = await EnforceGroupScopeAsync(groupId, Permissions.RecoverabilityGroupsView);
+            if (denied != null)
+            {
+                return denied;
+            }
+
             await store.DeleteComment(groupId);
 
             return Accepted();
         }
+
+        // Fail-closed scope guard for group operations.
+        // Groups span multiple queues and cannot be scope-verified against a single queue address.
+        // Scoped users (those without an unrestricted grant) are denied.
+#nullable enable
+        async Task<IActionResult?> EnforceGroupScopeAsync(string groupId, string permission)
+        {
+            if (!permissionEvaluator.HasUnrestrictedGrant(User, permission))
+            {
+                await AuthorizationHelpers.WriteScopeDenied403(Response, permission, queueAddress: groupId);
+                return new EmptyResult();
+            }
+            return null;
+        }
+#nullable restore
 
         [Authorize(Policy = Permissions.RecoverabilityGroupsView)]
         [Route("recoverability/groups/{classifier?}")]

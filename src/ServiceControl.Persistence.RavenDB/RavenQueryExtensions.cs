@@ -231,7 +231,9 @@ namespace ServiceControl.Persistence
         /// before comparison.
         /// </para>
         /// </summary>
+#nullable enable
         public static IAsyncDocumentQuery<T> FilterByQueueScope<T>(this IAsyncDocumentQuery<T> source, ResourceScope? scope)
+#nullable restore
         {
             // Null scope = unrestricted user — no filter.
             if (scope == null)

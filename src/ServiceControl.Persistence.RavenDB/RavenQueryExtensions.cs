@@ -242,11 +242,8 @@ namespace ServiceControl.Persistence
                 return source;
             }
 
-            // Build a WhereIn or chained WhereEquals for each allow pattern.
-            // RavenDB does not support server-side wildcard prefix matching on arbitrary fields
-            // without a custom index, so we filter allow patterns to exact matches and
-            // prefix-match patterns separately, then combine with OR.
-            // Patterns ending in ".*" are converted to StartsWith by using WhereStartsWith.
+            // Build the allow OR-group. Patterns ending in ".*" use WhereStartsWith;
+            // all patterns are lowercased to match the lower-cased index field.
             source.AndAlso();
             source.OpenSubclause();
 
@@ -259,35 +256,40 @@ namespace ServiceControl.Persistence
                 }
                 first = false;
 
-                if (pattern.EndsWith(".*", StringComparison.Ordinal))
+                var lower = pattern.ToLowerInvariant();
+
+                if (lower.EndsWith(".*", StringComparison.Ordinal))
                 {
-                    var prefix = pattern[..^2]; // strip ".*"
+                    // Prefix wildcard: "Prefix.*" → starts-with "prefix."
+                    // Strip the trailing "*" to get the prefix including the dot.
+                    var prefix = lower[..^1]; // e.g. "sales." from "sales.*"
                     source.WhereStartsWith("QueueAddress", prefix);
                 }
                 else
                 {
-                    source.WhereEquals("QueueAddress", pattern);
+                    // Exact match.
+                    source.WhereEquals("QueueAddress", lower);
                 }
             }
 
             source.CloseSubclause();
 
-            // Apply deny patterns (deny wins over allow).
+            // Apply deny patterns (AND NOT for each). Deny wins over allow.
             foreach (var denyPattern in scope.Deny)
             {
-                source.AndAlso();
-                if (denyPattern.EndsWith(".*", StringComparison.Ordinal))
+                var lower = denyPattern.ToLowerInvariant();
+
+                if (lower.EndsWith(".*", StringComparison.Ordinal))
                 {
-                    var prefix = denyPattern[..^2];
-                    source.WhereNotEquals("QueueAddress", prefix);
-                    // RavenDB does not have a WhereNotStartsWith; use a negated regex substitute or
-                    // filter post-query for deny. For simplicity in this v1 implementation,
-                    // apply deny as a NOT-equals on the pattern text — covers exact deny patterns.
-                    // Prefix-based deny requires post-query filtering (safe: fewer results, never more).
+                    // Prefix deny: AND NOT (QueueAddress STARTS WITH prefix).
+                    var prefix = lower[..^1]; // e.g. "finance." from "finance.*"
+                    source.AndAlso().Not.WhereStartsWith("QueueAddress", prefix);
                 }
                 else
                 {
-                    source.WhereNotEquals("QueueAddress", denyPattern);
+                    // Exact deny.
+                    source.AndAlso();
+                    source.WhereNotEquals("QueueAddress", lower);
                 }
             }
 

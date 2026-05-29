@@ -33,7 +33,7 @@ public sealed class PermissionEvaluator(Func<RbacPolicy> policyFactory) : IPermi
         return false;
     }
 
-    public bool IsInScope(ClaimsPrincipal user, string permission, string resource)
+    public bool IsInScope(ClaimsPrincipal user, string permission, Resource resource)
     {
         var policy = policyFactory();
         foreach (var role in MatchingRoles(user, policy))

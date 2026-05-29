@@ -59,7 +59,7 @@ namespace ServiceControl.MessageFailures.Api
                 var scopeResult = await scopeChecker.EnforceAsync(
                     User,
                     Permissions.MessagesRetry,
-                    queueAddress,
+                    queueAddress != null ? new QueueResource(queueAddress) : null,
                     HttpContext);
 
                 if (scopeResult != null)
@@ -111,7 +111,7 @@ namespace ServiceControl.MessageFailures.Api
             var scopeResult = await scopeChecker.EnforceAsync(
                 User,
                 Permissions.MessagesRetry,
-                queueAddress,
+                new QueueResource(queueAddress),
                 HttpContext);
 
             if (scopeResult != null)

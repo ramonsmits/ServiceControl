@@ -35,7 +35,7 @@
             var scopeResult = await scopeChecker.EnforceAsync(
                 User,
                 Permissions.MessagesView,
-                queueAddress,
+                queueAddress != null ? new QueueResource(queueAddress) : null,
                 HttpContext);
 
             if (scopeResult != null)
@@ -62,7 +62,7 @@
             var scopeResult = await scopeChecker.EnforceAsync(
                 User,
                 Permissions.MessagesView,
-                result.QueueAddress,
+                result.QueueAddress != null ? new QueueResource(result.QueueAddress) : null,
                 HttpContext);
 
             if (scopeResult != null)

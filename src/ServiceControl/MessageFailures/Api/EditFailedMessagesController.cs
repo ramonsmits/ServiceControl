@@ -73,7 +73,7 @@
             var scopeResult = await scopeChecker.EnforceAsync(
                 User,
                 Permissions.MessagesEdit,
-                queueAddress,
+                queueAddress != null ? new QueueResource(queueAddress) : null,
                 HttpContext);
 
             if (scopeResult != null)

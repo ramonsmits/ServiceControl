@@ -19,7 +19,7 @@ public interface IPermissionEvaluator
     /// A grant without a scope (null Scope) is in scope for all resources.
     /// A wildcard (<c>*</c>) grant is in scope for all permissions and all resources.
     /// </summary>
-    bool IsInScope(ClaimsPrincipal user, string permission, string resource);
+    bool IsInScope(ClaimsPrincipal user, string permission, Resource resource);
 
     /// <summary>
     /// Returns true if the user holds at least one unrestricted (null-scope) grant for the

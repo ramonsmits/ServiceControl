@@ -33,6 +33,12 @@ public sealed class ResourceScope(IReadOnlyList<string> allow, IReadOnlyList<str
     public bool Permits(string resource) =>
         Allow.Any(p => Matches(p, resource)) && !Deny.Any(p => Matches(p, resource));
 
+    /// <summary>
+    /// Convenience overload: extracts <see cref="Resource.Name"/> and delegates to
+    /// <see cref="Permits(string)"/>. Scope patterns still apply to the resource name.
+    /// </summary>
+    public bool Permits(Resource resource) => Permits(resource.Name);
+
     static bool Matches(string pattern, string resource) =>
         pattern == "*" ||
         pattern == resource ||

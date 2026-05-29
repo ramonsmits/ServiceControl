@@ -7,6 +7,13 @@ namespace ServiceControl.Infrastructure.Auth.Rbac;
 /// <c>ServiceControl.Audit</c> so they can be collected by any
 /// <c>ILogger</c>-compatible sink (Seq, OTLP, in-memory test double, …).
 /// </summary>
+/// <remarks>
+/// The sink for the decision the <strong>PDP</strong> (<see cref="IPermissionEvaluator"/>) returned.
+/// PEPs call this immediately after every <c>AuthorizeAsync</c> to ensure both the permits and the
+/// denies are captured — denies alone are not enough for compliance use cases. See
+/// <c>research/platform-authorization/audit-logging-approaches.md</c> for the design rationale and
+/// <c>research/platform-authorization/xacml-vocabulary.md</c> for the PEP/PDP/PAP/PIP vocabulary.
+/// </remarks>
 public interface IAuthorizationAuditLog
 {
     /// <summary>

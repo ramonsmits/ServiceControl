@@ -20,6 +20,12 @@ using Microsoft.AspNetCore.Authentication;
 /// are not added again.
 /// </para>
 /// </summary>
+/// <remarks>
+/// In XACML terms this is a <strong>PIP (Policy Information Point)</strong> for subject attributes:
+/// it converts an opaque IdP-supplied JSON blob into the role claims the PDP
+/// (<see cref="ServiceControl.Infrastructure.Auth.Rbac.IPermissionEvaluator"/>) can read directly.
+/// See <c>research/platform-authorization/xacml-vocabulary.md</c> for the full vocabulary.
+/// </remarks>
 public class RealmAccessClaimsTransformation : IClaimsTransformation
 {
     const string RealmAccessClaimType = "realm_access";

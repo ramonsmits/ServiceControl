@@ -11,20 +11,21 @@ using ServiceControl.Infrastructure.Auth.Rbac;
 /// S2-specific contract for inline resource-scope checking.
 /// <para>
 /// In S2 the controller calls <see cref="EnforceAsync"/> after loading the resource,
-/// passing the resolved queue address. The checker handles deny (writes the structured-403
-/// body and returns a non-null result to short-circuit) and allow (logs and returns null).
+/// passing a typed <see cref="Resource"/> (e.g. <see cref="QueueResource"/>). The checker
+/// handles deny (writes the structured-403 body and returns a non-null result to
+/// short-circuit) and allow (logs and returns null).
 /// </para>
 /// </summary>
 public interface IResourceScopeChecker
 {
     /// <summary>
     /// Checks whether <paramref name="user"/> is permitted to perform <paramref name="permission"/>
-    /// on the resource identified by <paramref name="queueAddress"/>.
+    /// on the given <paramref name="resource"/>.
     /// </summary>
     /// <param name="user">The authenticated user principal.</param>
     /// <param name="permission">The permission being enforced (e.g. <c>messages:retry</c>).</param>
-    /// <param name="queueAddress">
-    /// The queue address of the resource. When null or empty the check fails closed (deny).
+    /// <param name="resource">
+    /// The typed resource. When <see langword="null"/> the check fails closed (deny).
     /// </param>
     /// <param name="context">The HTTP context, used to write the structured 403 body on deny.</param>
     /// <returns>
@@ -34,7 +35,7 @@ public interface IResourceScopeChecker
     Task<IActionResult?> EnforceAsync(
         ClaimsPrincipal user,
         string permission,
-        string? queueAddress,
+        Resource? resource,
         HttpContext context);
 }
 
@@ -48,14 +49,14 @@ public sealed class ResourceScopeChecker(
     public async Task<IActionResult?> EnforceAsync(
         ClaimsPrincipal user,
         string permission,
-        string? queueAddress,
+        Resource? resource,
         HttpContext context)
     {
         var subjectId = AuthorizationHelpers.RequireSubjectId(user);
         var subjectName = AuthorizationHelpers.RequireSubjectName(user);
 
         // Fail closed: a resource with no resolvable queue address cannot be scope-checked.
-        if (string.IsNullOrEmpty(queueAddress))
+        if (resource == null)
         {
             auditLog.Decision(
                 subjectId,
@@ -70,17 +71,17 @@ public sealed class ResourceScopeChecker(
         }
 
         // Resource-scope check: is this resource's queue address in scope for the user?
-        if (!permissionEvaluator.IsInScope(user, permission, queueAddress))
+        if (!permissionEvaluator.IsInScope(user, permission, resource))
         {
             auditLog.Decision(
                 subjectId,
                 subjectName,
                 permission,
-                resource: queueAddress,
+                resource: resource.Name,
                 allowed: false,
-                reason: $"Resource-scope check: queue '{queueAddress}' is out of scope for permission '{permission}'");
+                reason: $"Resource-scope check: queue '{resource.Name}' is out of scope for permission '{permission}'");
 
-            await AuthorizationHelpers.WriteScopeDenied403(context.Response, permission, queueAddress);
+            await AuthorizationHelpers.WriteScopeDenied403(context.Response, permission, resource.Name);
             return new EmptyResult();
         }
 
@@ -88,9 +89,9 @@ public sealed class ResourceScopeChecker(
             subjectId,
             subjectName,
             permission,
-            resource: queueAddress,
+            resource: resource.Name,
             allowed: true,
-            reason: $"Resource-scope check: user holds '{permission}' and queue '{queueAddress}' is in scope");
+            reason: $"Resource-scope check: user holds '{permission}' and queue '{resource.Name}' is in scope");
 
         return null; // Access allowed — controller proceeds.
     }

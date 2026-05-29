@@ -70,7 +70,7 @@ public static class S2AuthorizationExtensions
         public Task<IActionResult?> EnforceAsync(
             ClaimsPrincipal user,
             string permission,
-            string? queueAddress,
+            Resource? resource,
             HttpContext context) =>
             Task.FromResult<IActionResult?>(null);
     }
@@ -87,7 +87,7 @@ public static class S2AuthorizationExtensions
     sealed class AllowAllPermissionEvaluator : IPermissionEvaluator
     {
         public bool HasPermission(ClaimsPrincipal user, string permission) => true;
-        public bool IsInScope(ClaimsPrincipal user, string permission, string resource) => true;
+        public bool IsInScope(ClaimsPrincipal user, string permission, Resource resource) => true;
         public bool HasUnrestrictedGrant(ClaimsPrincipal user, string permission) => true;
         public ResourceScope? ResolveQueueScope(ClaimsPrincipal user, string permission) => null;
         public EffectivePermissions Resolve(ClaimsPrincipal user) => new([]);

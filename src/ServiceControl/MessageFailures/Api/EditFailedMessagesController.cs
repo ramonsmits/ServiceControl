@@ -67,7 +67,7 @@ namespace ServiceControl.MessageFailures.Api
                 ?.AddressOfFailingEndpoint;
 
             var scopeDeny = await resourceScopeChecker.EnforceAsync(
-                User, Permissions.MessagesEdit, queueAddress, HttpContext);
+                User, Permissions.MessagesEdit, queueAddress != null ? new QueueResource(queueAddress) : null, HttpContext);
 
             if (scopeDeny != null)
             {

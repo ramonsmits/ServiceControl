@@ -35,7 +35,7 @@ namespace ServiceControl.MessageFailures.Api
                 ?.AddressOfFailingEndpoint;
 
             var scopeDeny = await resourceScopeChecker.EnforceAsync(
-                User, Permissions.MessagesView, queueAddress, HttpContext);
+                User, Permissions.MessagesView, queueAddress != null ? new QueueResource(queueAddress) : null, HttpContext);
 
             if (scopeDeny != null)
             {
@@ -60,7 +60,7 @@ namespace ServiceControl.MessageFailures.Api
             // Resource-scope check: consistent with ErrorBy — a scoped user must not view
             // a message whose queue is outside their scope.
             var scopeDeny = await resourceScopeChecker.EnforceAsync(
-                User, Permissions.MessagesView, result.QueueAddress, HttpContext);
+                User, Permissions.MessagesView, result.QueueAddress != null ? new QueueResource(result.QueueAddress) : null, HttpContext);
 
             if (scopeDeny != null)
             {

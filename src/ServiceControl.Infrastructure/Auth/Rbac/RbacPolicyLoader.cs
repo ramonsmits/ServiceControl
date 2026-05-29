@@ -15,6 +15,14 @@ using YamlDotNet.Serialization.NamingConventions;
 /// - A bare string: "messages:view"
 /// - An object with a scope: { permission: "messages:retry", scope: { allow: [...], deny: [...] } }
 /// </summary>
+/// <remarks>
+/// This loader plus the on-disk <c>rbac.yaml</c> file together form the
+/// <strong>PAP (Policy Administration Point)</strong>: the single source of truth for what the policy is.
+/// The <see cref="IPermissionEvaluator"/> (the PDP) reads the loaded model and never re-parses YAML at
+/// request time. The S4 variant additionally compiles the loaded model into Casbin policy lines at
+/// startup; the YAML stays the operator-facing PAP, the compiled form is an engine artifact.
+/// See <c>research/platform-authorization/xacml-vocabulary.md</c> for the full vocabulary.
+/// </remarks>
 public static class RbacPolicyLoader
 {
     static readonly IDeserializer Deserializer = new DeserializerBuilder()

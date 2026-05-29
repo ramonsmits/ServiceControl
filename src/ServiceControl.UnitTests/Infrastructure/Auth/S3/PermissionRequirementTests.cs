@@ -69,7 +69,9 @@ public class PermissionRequirementTests
 
     static ClaimsPrincipal PrincipalWithRole(string role)
     {
-        var identity = new ClaimsIdentity("Bearer");
+        var identity = new ClaimsIdentity("Bearer", nameType: "preferred_username", roleType: "role");
+        identity.AddClaim(new Claim("sub", "test-subject-id"));
+        identity.AddClaim(new Claim("preferred_username", "test-user"));
         identity.AddClaim(new Claim("role", role));
         return new ClaimsPrincipal(identity);
     }
@@ -241,11 +243,11 @@ public class PermissionRequirementTests
     {
         public List<DecisionRecord> Decisions { get; } = [];
 
-        public void Decision(string subject, string permission, string? resource, bool allowed, string reason)
+        public void Decision(string subjectId, string subjectName, string permission, string? resource, bool allowed, string reason)
         {
-            Decisions.Add(new DecisionRecord(subject, permission, resource, allowed, reason));
+            Decisions.Add(new DecisionRecord(subjectId, subjectName, permission, resource, allowed, reason));
         }
 
-        public record DecisionRecord(string Subject, string Permission, string? Resource, bool Allowed, string Reason);
+        public record DecisionRecord(string SubjectId, string SubjectName, string Permission, string? Resource, bool Allowed, string Reason);
     }
 }

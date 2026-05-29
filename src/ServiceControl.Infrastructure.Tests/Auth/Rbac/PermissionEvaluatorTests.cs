@@ -54,8 +54,8 @@ public class PermissionEvaluatorTests
         var evaluator = new PermissionEvaluator(() => RbacPolicyLoader.Parse(ScopedPolicyYaml));
         var user = PrincipalWithGroups("/devops/sales");
 
-        Assert.That(evaluator.IsInScope(user, "messages:retry", "acme.sales.orders"), Is.True);
-        Assert.That(evaluator.IsInScope(user, "messages:retry", "acme.finance.ap"), Is.False);
+        Assert.That(evaluator.IsInScope(user, "messages:retry", new QueueResource("acme.sales.orders")), Is.True);
+        Assert.That(evaluator.IsInScope(user, "messages:retry", new QueueResource("acme.finance.ap")), Is.False);
     }
 
     [Test]
@@ -75,8 +75,8 @@ public class PermissionEvaluatorTests
         var evaluator = new PermissionEvaluator(() => RbacPolicyLoader.Parse(AdminPolicyYaml));
         var user = PrincipalWithRoles("sc-admin");
 
-        Assert.That(evaluator.IsInScope(user, "messages:retry", "any.queue"), Is.True);
-        Assert.That(evaluator.IsInScope(user, "anything:else", "another.queue"), Is.True);
+        Assert.That(evaluator.IsInScope(user, "messages:retry", new QueueResource("any.queue")), Is.True);
+        Assert.That(evaluator.IsInScope(user, "anything:else", new QueueResource("another.queue")), Is.True);
     }
 
     [Test]
@@ -86,8 +86,8 @@ public class PermissionEvaluatorTests
         var user = PrincipalWithRoles("sc-operator");
 
         // messages:retry is granted without a scope, so any resource is in scope
-        Assert.That(evaluator.IsInScope(user, "messages:retry", "any.queue"), Is.True);
-        Assert.That(evaluator.IsInScope(user, "messages:retry", "another.queue"), Is.True);
+        Assert.That(evaluator.IsInScope(user, "messages:retry", new QueueResource("any.queue")), Is.True);
+        Assert.That(evaluator.IsInScope(user, "messages:retry", new QueueResource("another.queue")), Is.True);
     }
 
     [Test]
@@ -144,11 +144,11 @@ public class PermissionEvaluatorTests
         var user = new ClaimsPrincipal(identity);
 
         // role-a denies acme.finance.ap but role-b allows it — overall: permitted
-        Assert.That(evaluator.IsInScope(user, "messages:retry", "acme.finance.ap"), Is.True,
+        Assert.That(evaluator.IsInScope(user, "messages:retry", new QueueResource("acme.finance.ap")), Is.True,
             "Grant B's allow should win independently of grant A's deny");
 
         // role-a allows acme.sales.orders; role-b also allows it — still permitted
-        Assert.That(evaluator.IsInScope(user, "messages:retry", "acme.sales.orders"), Is.True);
+        Assert.That(evaluator.IsInScope(user, "messages:retry", new QueueResource("acme.sales.orders")), Is.True);
     }
 
     [Test]
@@ -213,6 +213,20 @@ public class PermissionEvaluatorTests
         var retryGrants = effective.Grants.Where(g => g.Permission == "messages:retry").ToArray();
         Assert.That(retryGrants, Has.Length.EqualTo(2),
             "Two roles granting the same permission with different scopes must yield two entries (OR semantics)");
+    }
+
+    [Test]
+    public void IsInScope_typed_QueueResource_matches_same_as_string()
+    {
+        // Confirms that passing a QueueResource produces identical results to the former
+        // string overload — the type tag must not alter the scope-matching outcome.
+        var evaluator = new PermissionEvaluator(() => RbacPolicyLoader.Parse(ScopedPolicyYaml));
+        var user = PrincipalWithGroups("/devops/sales");
+
+        Assert.That(evaluator.IsInScope(user, "messages:retry", new QueueResource("acme.sales.orders")), Is.True,
+            "QueueResource wrapping an in-scope name must be permitted");
+        Assert.That(evaluator.IsInScope(user, "messages:retry", new QueueResource("acme.finance.ap")), Is.False,
+            "QueueResource wrapping an out-of-scope name must be denied");
     }
 
     static ClaimsPrincipal PrincipalWithRoles(params string[] roles)

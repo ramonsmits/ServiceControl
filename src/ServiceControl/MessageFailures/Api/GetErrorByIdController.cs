@@ -62,7 +62,7 @@
             // Resource-scope check: consistent with ErrorBy — a scoped user must not view
             // a message whose queue is outside their scope.
             if (!AuthorizationHelpers.HasUnrestrictedGrant(permissionEvaluator, User, Permissions.MessagesView)
-                && !permissionEvaluator.IsInScope(User, Permissions.MessagesView, result.QueueAddress ?? string.Empty))
+                && !permissionEvaluator.IsInScope(User, Permissions.MessagesView, new QueueResource(result.QueueAddress ?? string.Empty)))
             {
                 await AuthorizationHelpers.WriteScopeDenied403(Response, Permissions.MessagesView, result.QueueAddress);
                 return Empty;

@@ -60,7 +60,7 @@ public sealed class FailedMessageAuthorizationHandler(
         }
 
         // Resource-scope check: is this specific message's queue in scope for this user?
-        if (!permissionEvaluator.IsInScope(context.User, permission, queueAddress))
+        if (!permissionEvaluator.IsInScope(context.User, permission, new QueueResource(queueAddress)))
         {
             auditLog.Decision(
                 subjectId,

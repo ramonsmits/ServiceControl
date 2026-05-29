@@ -6,6 +6,16 @@ using System.Security.Claims;
 /// <summary>
 /// Evaluates a user's permissions against the loaded RBAC policy.
 /// </summary>
+/// <remarks>
+/// In XACML reference-architecture terms this is the <strong>PDP (Policy Decision Point)</strong>:
+/// it consumes the rules loaded from the <strong>PAP</strong> (the <c>rbac.yaml</c> loader) plus the subject
+/// attributes (claims) and the resource, and returns permit/deny — it never calls out to the database
+/// or to HTTP itself. The <c>[Authorize(Policy=...)]</c> attribute and the explicit
+/// <c>AuthorizeAsync(...)</c> call sites in controllers are the <strong>PEPs (Policy Enforcement Points)</strong>;
+/// the claims transformation and the resource loaders that hand attributes to this evaluator are the
+/// <strong>PIPs (Policy Information Points)</strong>. See
+/// <c>research/platform-authorization/xacml-vocabulary.md</c> in the GeneralPlatformExperience repo for the full mapping.
+/// </remarks>
 public interface IPermissionEvaluator
 {
     /// <summary>

@@ -9,12 +9,14 @@ using YamlDotNet.Serialization.NamingConventions;
 
 /// <summary>
 /// Loads <c>extract-headers.yaml</c> into a <see cref="CustomIndexConfig"/>.
-/// Same loader shape as <see cref="ServiceControl.Infrastructure.Auth.Rbac.RbacPolicyLoader"/>.
+/// Same loader shape as <see cref="ServiceControl.Infrastructure.Auth.Rbac.RbacPolicyLoader"/>
+/// but uses hyphenated naming (e.g. <c>extract-headers</c>) since the operator-facing schema
+/// is kebab-cased.
 /// </summary>
 public static class CustomIndexLoader
 {
     static readonly IDeserializer Deserializer = new DeserializerBuilder()
-        .WithNamingConvention(CamelCaseNamingConvention.Instance)
+        .WithNamingConvention(HyphenatedNamingConvention.Instance)
         .IgnoreUnmatchedProperties()
         .Build();
 

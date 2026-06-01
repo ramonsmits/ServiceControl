@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ServiceControl.Infrastructure;
 using ServiceControl.Infrastructure.Auth.Rbac;
+using ServiceControl.Infrastructure.Auth.Tenants;
 
 /// <summary>
 /// Registers the ServiceControl RBAC authorization services.
@@ -43,6 +44,12 @@ public static class AuthorizationHostApplicationBuilderExtensions
             new PermissionEvaluator(sp.GetRequiredService<Func<RbacPolicy>>()));
 
         hostBuilder.Services.AddSingleton<IAuthorizationAuditLog, AuthorizationAuditLog>();
+
+        // IdP-managed authorization data: the tenant set lives on the JWT, not in rbac.yaml.
+        // Reads the claim configured by Authentication.TenantsClaim (default: "tenants").
+        var tenantsClaim = oidcSettings.TenantsClaim;
+        hostBuilder.Services.AddSingleton<IUserTenantsProvider>(
+            new ClaimBasedUserTenantsProvider(tenantsClaim));
 
         // Ensure the claims transformation runs for every request so realm_access roles
         // are flattened into individual 'role' claims before authorization is evaluated.

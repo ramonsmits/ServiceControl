@@ -43,6 +43,7 @@ public class OpenIdConnectSettings
 
         RbacPolicyFile = SettingsReader.Read(rootNamespace, "Authentication.RbacPolicyFile", "rbac.yaml");
         SubjectDisplayClaim = SettingsReader.Read(rootNamespace, "Authentication.SubjectDisplayClaim", "preferred_username");
+        TenantsClaim = SettingsReader.Read(rootNamespace, "Authentication.TenantsClaim", "tenants");
 
         if (validateConfiguration)
         {
@@ -68,6 +69,16 @@ public class OpenIdConnectSettings
     /// Can be overridden via the Authentication.SubjectDisplayClaim setting.
     /// </summary>
     public string SubjectDisplayClaim { get; }
+
+    /// <summary>
+    /// The JWT claim that carries the list of tenants the user is authorized to access.
+    /// Defaults to <c>tenants</c>. Expects either a single multivalued claim or multiple
+    /// claims of the same type (Keycloak's <c>oidc-usermodel-attribute-mapper</c> with
+    /// <c>Multivalued=true</c> emits one claim per attribute value). The application stores
+    /// no tenant-to-user mapping itself — the IdP is the source of truth.
+    /// Can be overridden via the Authentication.TenantsClaim setting.
+    /// </summary>
+    public string TenantsClaim { get; }
 
     /// <summary>
     /// The OpenID Connect authority URL (issuer). This is the base URL of the identity provider

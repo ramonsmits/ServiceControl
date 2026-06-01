@@ -63,6 +63,11 @@ public static class S3AuthorizationExtensions
         // Resource-scope handler: PermissionRequirement + FailureGroupView
         // Groups span multiple queues; fail-closed for scoped users (see FailureGroupAuthorizationHandler).
         services.AddSingleton<IAuthorizationHandler, FailureGroupAuthorizationHandler>();
+
+        // Tenant-access handler — independent of the RBAC PDP. Resolves
+        // TenantAccessRequirement against the IdP-supplied tenants claim
+        // via IUserTenantsProvider (registered in AddServiceControlAuthorization).
+        services.AddSingleton<IAuthorizationHandler, TenantAccessHandler>();
     }
 
     /// <summary>

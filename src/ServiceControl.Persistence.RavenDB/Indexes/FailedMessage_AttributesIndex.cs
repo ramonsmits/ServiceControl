@@ -27,6 +27,14 @@ namespace ServiceControl.MessageFailures.Api
     {
         readonly string version;
 
+        /// <summary>
+        /// Parameterless ctor required only because <c>IndexCreation.CreateIndexesAsync(assembly,...)</c>
+        /// reflects through the assembly and instantiates every index-task type with a default ctor.
+        /// Produces a placeholder index name (<c>vunset</c>) that <c>DatabaseSetup</c> skips —
+        /// the real registration happens explicitly with the keys + version loaded from <see cref="CustomIndexConfig"/>.
+        /// </summary>
+        public FailedMessage_AttributesIndex() : this(Array.Empty<string>(), "unset") { }
+
         public FailedMessage_AttributesIndex(string[] headerKeys, string version)
         {
             this.version = version;

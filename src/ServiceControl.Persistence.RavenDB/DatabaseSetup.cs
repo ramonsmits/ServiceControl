@@ -1,6 +1,9 @@
 namespace ServiceControl.Persistence.RavenDB
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
     using Raven.Client.Documents;
@@ -23,7 +26,13 @@ namespace ServiceControl.Persistence.RavenDB
             await UpdateDatabaseSettings(settings.DatabaseName, cancellationToken);
             await UpdateDatabaseSettings(settings.ThroughputDatabaseName, cancellationToken);
 
-            await IndexCreation.CreateIndexesAsync(typeof(DatabaseSetup).Assembly, documentStore, null, null, cancellationToken);
+            // Auto-discover and register all index-creation tasks in the assembly EXCEPT
+            // FailedMessage_AttributesIndex, which has a parameterized ctor for config-driven
+            // dynamic-field emission and is registered explicitly below.
+            var indexes = DiscoverIndexTasks(typeof(DatabaseSetup).Assembly)
+                .Where(i => i.GetType() != typeof(FailedMessage_AttributesIndex))
+                .ToList();
+            await IndexCreation.CreateIndexesAsync(indexes, documentStore, null, null, cancellationToken);
 
             // Custom-index spike: register the dynamic-field FailedMessage_AttributesIndex
             // with the active CustomIndexConfig's keys + version. Same version ⇒ no-op;
@@ -38,6 +47,28 @@ namespace ServiceControl.Persistence.RavenDB
 
             await LicenseStatusCheck.WaitForLicenseOrThrow(documentStore, cancellationToken);
             await ConfigureExpiration(settings, cancellationToken);
+        }
+
+        // Mirrors the internal RavenDB GetAllInstancesOfType auto-discovery: any concrete
+        // class derived from any index-creation base. The list is then filtered by the caller.
+        static IEnumerable<AbstractIndexCreationTask> DiscoverIndexTasks(Assembly assembly)
+        {
+            foreach (var type in assembly.GetTypes())
+            {
+                if (type.IsAbstract)
+                {
+                    continue;
+                }
+                if (!typeof(AbstractIndexCreationTask).IsAssignableFrom(type))
+                {
+                    continue;
+                }
+                if (type.GetConstructor(Type.EmptyTypes) == null)
+                {
+                    continue;
+                }
+                yield return (AbstractIndexCreationTask)Activator.CreateInstance(type);
+            }
         }
 
         async Task CreateDatabase(string databaseName, CancellationToken cancellationToken)

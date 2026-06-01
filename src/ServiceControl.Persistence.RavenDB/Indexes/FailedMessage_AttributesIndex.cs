@@ -50,13 +50,13 @@ map('FailedMessages', function (m) {{
     if (!last) {{ return null; }}
     var headers = last.Headers || {{}};
     var keys = {keysJson};
-    var doc = {{ MessageId: m['@metadata']['@id'], Status: m.Status }};
+    var doc = {{ MessageId: id(m), Status: m.Status }};
     for (var i = 0; i < keys.length; i++) {{
         var k = keys[i];
         if (headers.hasOwnProperty(k) && headers[k] !== null && headers[k] !== undefined) {{
-            doc['Attr_' + k] = createField('Attr_' + k, headers[k], {{
-                indexing: 'Exact', storage: 'No', termVector: 'No'
-            }});
+            // Direct property assignment — RavenDB auto-indexes every map-output property.
+            // createField(...) trips Corax's analyzer-consistency check on heterogeneous docs.
+            doc['Attr_' + k] = headers[k];
         }}
     }}
     return doc;

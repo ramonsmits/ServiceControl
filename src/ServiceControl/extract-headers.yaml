@@ -19,9 +19,12 @@
 # Without `authz`, the attribute is a plain filter chip (no scope narrowing).
 
 extract-headers:
-  - key: NServiceBus.FailedQ          # the queue the failed message landed on; UI hint: starts-with
+  - key: NServiceBus.FailedQ
+    operator: starts-with             # the queue the failed message landed on
   - key: NServiceBus.Tenant
+    operator: equals
     authz:
       source: idp-claim
       claim: tenants
-  - key: Acme.MyCustomerKey           # plain filter chip; no authz narrowing
+  - key: Acme.MyCustomerKey
+    operator: equals                  # plain filter chip; no authz narrowing

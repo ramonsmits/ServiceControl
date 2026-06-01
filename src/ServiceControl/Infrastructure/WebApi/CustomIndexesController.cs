@@ -33,6 +33,7 @@ public sealed class CustomIndexesController(CustomIndexConfig config) : Controll
         var entries = config.Indexes
             .Select(i => new CustomIndexEntry(
                 Key: i.Key,
+                Operator: i.Operator,
                 Authz: i.Authz == null
                     ? null
                     : new CustomIndexAuthzEntry(
@@ -51,7 +52,7 @@ public sealed class CustomIndexesController(CustomIndexConfig config) : Controll
 public sealed record CustomIndexesDescriptor(string Version, IReadOnlyList<CustomIndexEntry> Indexes);
 
 /// <summary>A single configured custom index.</summary>
-public sealed record CustomIndexEntry(string Key, CustomIndexAuthzEntry? Authz);
+public sealed record CustomIndexEntry(string Key, string Operator, CustomIndexAuthzEntry? Authz);
 
 /// <summary>The authz narrowing source for a custom index, or null for an unauthz'd filter chip.</summary>
 public sealed record CustomIndexAuthzEntry(string Source, string? Claim, string? Key);

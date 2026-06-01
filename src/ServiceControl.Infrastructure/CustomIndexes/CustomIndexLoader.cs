@@ -53,7 +53,8 @@ public static class CustomIndexLoader
                     Key: entry.Authz.Key);
             }
 
-            indexes.Add(new CustomIndex(entry.Key!, authz));
+            var op = string.IsNullOrWhiteSpace(entry.Operator) ? "equals" : entry.Operator!;
+            indexes.Add(new CustomIndex(entry.Key!, op, authz));
         }
 
         return new CustomIndexConfig(indexes);
@@ -67,6 +68,7 @@ public static class CustomIndexLoader
     sealed class YamlEntry
     {
         public string? Key { get; set; }
+        public string? Operator { get; set; }
         public YamlAuthz? Authz { get; set; }
     }
 

@@ -68,6 +68,14 @@ namespace ServiceControl.Persistence
             PagingInfo pagingInfo,
             SortInfo sortInfo);
 
+        /// <summary>
+        /// Returns the distinct values observed for a configured custom-index attribute,
+        /// with per-value document counts (RavenDB facet aggregation against the
+        /// <c>FailedMessage/Attributes/v&lt;hash&gt;</c> index). Used by ServicePulse to
+        /// populate the filter-chip dropdowns instead of asking the user to type.
+        /// </summary>
+        Task<IDictionary<string, long>> ErrorGetAttributeValues(string headerKey, string indexVersion);
+
         Task<QueryStatsInfo> ErrorsHead(string status, string modified, string queueAddress);
         /// <summary>
         /// Returns a paged list of failed messages for the specified endpoint, optionally filtered to

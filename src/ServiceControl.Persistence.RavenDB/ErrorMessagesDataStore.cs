@@ -259,7 +259,7 @@
             return stats.ToQueryStatsInfo();
         }
 
-        public async Task<IDictionary<string, long>> ErrorGetAttributeValues(string headerKey, string indexVersion)
+        public async Task<IDictionary<string, int>> ErrorGetAttributeValues(string headerKey, string indexVersion)
         {
             using var session = await sessionProvider.OpenSession();
             var indexName = $"FailedMessage/Attributes/v{indexVersion}";
@@ -274,7 +274,7 @@
             // come back with `Range` (the indexed value) + `Count`.
             if (!facetResults.TryGetValue(fieldName, out var facet))
             {
-                return new Dictionary<string, long>();
+                return new Dictionary<string, int>();
             }
             return facet.Values
                 .Where(v => !string.IsNullOrEmpty(v.Range))

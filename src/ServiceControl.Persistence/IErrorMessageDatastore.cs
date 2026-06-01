@@ -74,7 +74,7 @@ namespace ServiceControl.Persistence
         /// <c>FailedMessage/Attributes/v&lt;hash&gt;</c> index). Used by ServicePulse to
         /// populate the filter-chip dropdowns instead of asking the user to type.
         /// </summary>
-        Task<IDictionary<string, long>> ErrorGetAttributeValues(string headerKey, string indexVersion);
+        Task<IDictionary<string, int>> ErrorGetAttributeValues(string headerKey, string indexVersion);
 
         Task<QueryStatsInfo> ErrorsHead(string status, string modified, string queueAddress);
         /// <summary>

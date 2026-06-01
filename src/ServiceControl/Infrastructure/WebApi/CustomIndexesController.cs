@@ -101,4 +101,4 @@ public sealed record AttributeValuesDescriptor(
     IReadOnlyList<AttributeValueCount> Values);
 
 /// <summary>A single distinct value observed for an attribute, with its document count.</summary>
-public sealed record AttributeValueCount(string Value, long Count);
+public sealed record AttributeValueCount(string Value, int Count);

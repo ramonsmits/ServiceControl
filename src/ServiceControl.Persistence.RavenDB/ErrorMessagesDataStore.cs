@@ -262,6 +262,7 @@
         public async Task<QueryResult<IList<FailedMessageView>>> ErrorGetByAttributes(
             IReadOnlyDictionary<string, string> equalsFilters,
             IReadOnlyDictionary<string, string> startsWithFilters,
+            IReadOnlyDictionary<string, IReadOnlyList<string>> inFilters,
             string indexVersion,
             PagingInfo pagingInfo,
             SortInfo sortInfo)
@@ -293,6 +294,17 @@
                     continue;
                 }
                 query = query.AndAlso().WhereStartsWith("Attr_" + header, value);
+            }
+
+            foreach (var (header, values) in inFilters)
+            {
+                if (values == null || values.Count == 0)
+                {
+                    // Caller is responsible for short-circuiting on empty authorized sets;
+                    // skip rather than match-all so an empty in-list can never silently widen.
+                    continue;
+                }
+                query = query.AndAlso().WhereIn("Attr_" + header, values);
             }
 
             var docs = await query

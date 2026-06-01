@@ -51,6 +51,11 @@ namespace ServiceControl.Persistence
         /// Per-header STARTS-WITH predicates (same key shape as <paramref name="equalsFilters"/>).
         /// Useful for queue prefixes (e.g. <c>NServiceBus.FailedQ</c> starts with <c>Sales.</c>).
         /// </param>
+        /// <param name="inFilters">
+        /// Per-header IN-list predicates (RavenDB <c>WhereIn</c>). Used by the authz layer to
+        /// narrow an unfiltered authz-eligible dimension to the user's authorized value set.
+        /// Empty list ⇒ the caller should short-circuit to 0 results instead of calling this.
+        /// </param>
         /// <param name="indexVersion">
         /// The active <see cref="ServiceControl.Infrastructure.CustomIndexes.CustomIndexConfig.Version"/> — used to address
         /// the correct side-by-side index after a config change.
@@ -58,6 +63,7 @@ namespace ServiceControl.Persistence
         Task<QueryResult<IList<FailedMessageView>>> ErrorGetByAttributes(
             IReadOnlyDictionary<string, string> equalsFilters,
             IReadOnlyDictionary<string, string> startsWithFilters,
+            IReadOnlyDictionary<string, IReadOnlyList<string>> inFilters,
             string indexVersion,
             PagingInfo pagingInfo,
             SortInfo sortInfo);

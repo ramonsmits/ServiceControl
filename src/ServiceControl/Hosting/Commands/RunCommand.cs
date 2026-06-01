@@ -39,6 +39,7 @@
             var hostBuilder = WebApplication.CreateBuilder();
 
             hostBuilder.Services.AddSingleton(customIndexConfig);
+            hostBuilder.Services.AddSingleton<ICustomIndexAuthzResolver, CustomIndexAuthzResolver>();
 
             hostBuilder.AddServiceControlAuthentication(settings.OpenIdConnectSettings);
             hostBuilder.AddServiceControlAuthorization(settings.OpenIdConnectSettings);

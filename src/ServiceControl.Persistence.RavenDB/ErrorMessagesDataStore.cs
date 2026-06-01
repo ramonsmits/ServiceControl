@@ -281,6 +281,70 @@
                 .ToDictionary(v => v.Range, v => v.Count);
         }
 
+        public async Task<IReadOnlyList<string>> ErrorGetMatchingGroupIds(
+            IReadOnlyDictionary<string, string> equalsFilters,
+            IReadOnlyDictionary<string, string> startsWithFilters,
+            IReadOnlyDictionary<string, IReadOnlyList<string>> inFilters,
+            string indexVersion,
+            string classifierType)
+        {
+            using var session = await sessionProvider.OpenSession();
+            var indexName = $"FailedMessage/Attributes/v{indexVersion}";
+
+            var query = session.Advanced
+                .AsyncDocumentQuery<FailedMessage_AttributesIndex.Result>(indexName);
+
+            foreach (var (header, value) in equalsFilters)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    continue;
+                }
+                query = query.AndAlso().WhereEquals("Attr_" + header, value);
+            }
+            foreach (var (header, value) in startsWithFilters)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    continue;
+                }
+                query = query.AndAlso().WhereStartsWith("Attr_" + header, value);
+            }
+            foreach (var (header, values) in inFilters)
+            {
+                if (values == null || values.Count == 0)
+                {
+                    continue;
+                }
+                query = query.AndAlso().WhereIn("Attr_" + header, values);
+            }
+
+            // Load up to 1000 matching docs (spike-stage cap). Production would page or
+            // use a server-side multi-map join index.
+            var docs = await query
+                .Take(1000)
+                .SelectFields<FailedMessage>()
+                .ToQueryable()
+                .ToListAsync();
+
+            var ids = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var doc in docs)
+            {
+                if (doc.FailureGroups == null)
+                {
+                    continue;
+                }
+                foreach (var g in doc.FailureGroups)
+                {
+                    if (string.Equals(g.Type, classifierType, StringComparison.Ordinal))
+                    {
+                        ids.Add(g.Id);
+                    }
+                }
+            }
+            return ids.ToList();
+        }
+
         public async Task<QueryResult<IList<FailedMessageView>>> ErrorGetByAttributes(
             IReadOnlyDictionary<string, string> equalsFilters,
             IReadOnlyDictionary<string, string> startsWithFilters,

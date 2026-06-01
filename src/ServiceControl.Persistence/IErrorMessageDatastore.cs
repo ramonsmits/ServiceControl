@@ -76,6 +76,19 @@ namespace ServiceControl.Persistence
         /// </summary>
         Task<IDictionary<string, int>> ErrorGetAttributeValues(string headerKey, string indexVersion);
 
+        /// <summary>
+        /// Returns the distinct <see cref="FailedMessage.FailureGroup.Id"/>s of failure groups
+        /// (filtered to the given classifier type) whose underlying messages match the supplied
+        /// attribute predicates. Used by ServicePulse to narrow the Failed Message Groups view
+        /// to only groups that contain messages matching the active custom-index filter chips.
+        /// </summary>
+        Task<IReadOnlyList<string>> ErrorGetMatchingGroupIds(
+            IReadOnlyDictionary<string, string> equalsFilters,
+            IReadOnlyDictionary<string, string> startsWithFilters,
+            IReadOnlyDictionary<string, IReadOnlyList<string>> inFilters,
+            string indexVersion,
+            string classifierType);
+
         Task<QueryStatsInfo> ErrorsHead(string status, string modified, string queueAddress);
         /// <summary>
         /// Returns a paged list of failed messages for the specified endpoint, optionally filtered to

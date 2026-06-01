@@ -38,6 +38,30 @@ namespace ServiceControl.Persistence
         /// </para>
         /// </summary>
         Task<QueryResult<IList<FailedMessageView>>> ErrorGet(string status, string modified, string queueAddress, PagingInfo pagingInfo, SortInfo sortInfo, ResourceScope? queueScope = null);
+
+        /// <summary>
+        /// Returns a paged list of failed messages filtered by custom-attribute equality / starts-with predicates,
+        /// resolved via the dynamic-field <c>FailedMessage/Attributes/v&lt;hash&gt;</c> index.
+        /// </summary>
+        /// <param name="equalsFilters">
+        /// Per-header EQUALS predicates. Keys are bare header names (e.g. <c>NServiceBus.Tenant</c>); the implementation
+        /// prefixes them with <c>Attr_</c> to hit the indexed dynamic field. Multiple predicates compose with AND.
+        /// </param>
+        /// <param name="startsWithFilters">
+        /// Per-header STARTS-WITH predicates (same key shape as <paramref name="equalsFilters"/>).
+        /// Useful for queue prefixes (e.g. <c>NServiceBus.FailedQ</c> starts with <c>Sales.</c>).
+        /// </param>
+        /// <param name="indexVersion">
+        /// The active <see cref="ServiceControl.Infrastructure.CustomIndexes.CustomIndexConfig.Version"/> — used to address
+        /// the correct side-by-side index after a config change.
+        /// </param>
+        Task<QueryResult<IList<FailedMessageView>>> ErrorGetByAttributes(
+            IReadOnlyDictionary<string, string> equalsFilters,
+            IReadOnlyDictionary<string, string> startsWithFilters,
+            string indexVersion,
+            PagingInfo pagingInfo,
+            SortInfo sortInfo);
+
         Task<QueryStatsInfo> ErrorsHead(string status, string modified, string queueAddress);
         /// <summary>
         /// Returns a paged list of failed messages for the specified endpoint, optionally filtered to

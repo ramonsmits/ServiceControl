@@ -1,0 +1,27 @@
+# Custom message-attribute indexes for failed-message filtering.
+#
+# Each entry declares a message header to extract and surface as a queryable
+# attribute. The values flow into a dynamic-field RavenDB index
+# (`FailedMessage/Attributes/v<hash>`) so failed messages can be filtered by
+# `GET /api/errors/by-attributes?attr.<key>=<value>` and ServicePulse can
+# render a filter chip per entry.
+#
+# Adding or removing entries here changes the versioned index name; RavenDB
+# builds the new index side-by-side in the background and swaps queries once
+# it catches up. Existing failed messages are picked up automatically as part
+# of that build — no separate backfill step.
+#
+# `authz` is optional. When present, the values the user is allowed to see
+# for this attribute are intersected with the user's effective set:
+#   source: idp-claim    → values come from a JWT claim (`claim:` names it)
+#   source: role         → values come from the rbac.yaml role binding
+#                          property named by `key:` (per-role list)
+# Without `authz`, the attribute is a plain filter chip (no scope narrowing).
+
+extract-headers:
+  - key: NServiceBus.FailedQ          # the queue the failed message landed on; UI hint: starts-with
+  - key: NServiceBus.Tenant
+    authz:
+      source: idp-claim
+      claim: tenants
+  - key: Acme.MyCustomerKey           # plain filter chip; no authz narrowing

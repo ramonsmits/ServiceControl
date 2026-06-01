@@ -10,6 +10,8 @@ namespace ServiceControl.Persistence.RavenDB
     using Raven.Client.ServerWide;
     using Raven.Client.ServerWide.Operations;
     using Raven.Client.ServerWide.Operations.Configuration;
+    using ServiceControl.Infrastructure.CustomIndexes;
+    using ServiceControl.MessageFailures.Api;
 
     class DatabaseSetup(RavenPersisterSettings settings, IDocumentStore documentStore)
     {
@@ -22,6 +24,17 @@ namespace ServiceControl.Persistence.RavenDB
             await UpdateDatabaseSettings(settings.ThroughputDatabaseName, cancellationToken);
 
             await IndexCreation.CreateIndexesAsync(typeof(DatabaseSetup).Assembly, documentStore, null, null, cancellationToken);
+
+            // Custom-index spike: register the dynamic-field FailedMessage_AttributesIndex
+            // with the active CustomIndexConfig's keys + version. Same version ⇒ no-op;
+            // changed version ⇒ RavenDB builds a new index side-by-side without blocking
+            // queries on the existing one.
+            var customConfig = CustomIndexConfig.Active;
+            if (customConfig.Indexes.Count > 0)
+            {
+                var attributesIndex = new FailedMessage_AttributesIndex(customConfig.Keys, customConfig.Version);
+                await attributesIndex.ExecuteAsync(documentStore, null, null, cancellationToken);
+            }
 
             await LicenseStatusCheck.WaitForLicenseOrThrow(documentStore, cancellationToken);
             await ConfigureExpiration(settings, cancellationToken);

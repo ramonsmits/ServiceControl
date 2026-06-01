@@ -259,6 +259,53 @@
             return stats.ToQueryStatsInfo();
         }
 
+        public async Task<QueryResult<IList<FailedMessageView>>> ErrorGetByAttributes(
+            IReadOnlyDictionary<string, string> equalsFilters,
+            IReadOnlyDictionary<string, string> startsWithFilters,
+            string indexVersion,
+            PagingInfo pagingInfo,
+            SortInfo sortInfo)
+        {
+            using var session = await sessionProvider.OpenSession();
+
+            // Address the side-by-side dynamic-field index by its versioned name.
+            // The index emits one Attr_<key> field per configured header that's
+            // present on the failed message's last processing attempt.
+            var indexName = $"FailedMessage/Attributes/v{indexVersion}";
+
+            var query = session.Advanced
+                .AsyncDocumentQuery<FailedMessage_AttributesIndex.Result>(indexName)
+                .Statistics(out var stats);
+
+            foreach (var (header, value) in equalsFilters)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    continue;
+                }
+                query = query.AndAlso().WhereEquals("Attr_" + header, value);
+            }
+
+            foreach (var (header, value) in startsWithFilters)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    continue;
+                }
+                query = query.AndAlso().WhereStartsWith("Attr_" + header, value);
+            }
+
+            var docs = await query
+                .Sort(sortInfo)
+                .Paging(pagingInfo)
+                .SelectFields<FailedMessage>()
+                .ToQueryable()
+                .TransformToFailedMessageView()
+                .ToListAsync();
+
+            return new QueryResult<IList<FailedMessageView>>(docs, stats.ToQueryStatsInfo());
+        }
+
 #nullable enable
         public async Task<QueryResult<IList<FailedMessageView>>> ErrorsByEndpointName(
             string status,

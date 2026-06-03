@@ -44,11 +44,16 @@ public static class AuthorizationHostApplicationBuilderExtensions
 
         hostBuilder.Services.AddSingleton<IAuthorizationAuditLog, AuthorizationAuditLog>();
 
-        // Ensure the claims transformation runs for every request so realm_access roles
-        // are flattened into individual 'role' claims before authorization is evaluated.
-        hostBuilder.Services.AddSingleton<
-            Microsoft.AspNetCore.Authentication.IClaimsTransformation,
-            RealmAccessClaimsTransformation>();
+        // Ensure the claims transformation runs for every request so the IdP-supplied
+        // role/group values are flattened into canonical 'role' / 'group' claims before
+        // authorization is evaluated. The claim paths are configurable for IdP portability:
+        //   Keycloak (default)      Authentication.RolesClaim=realm_access.roles  Authentication.GroupsClaim=groups
+        //   Microsoft Entra ID      Authentication.RolesClaim=roles               Authentication.GroupsClaim=groups
+        //   AWS Cognito             Authentication.RolesClaim=cognito:groups      Authentication.GroupsClaim=cognito:groups
+        hostBuilder.Services.AddSingleton<Microsoft.AspNetCore.Authentication.IClaimsTransformation>(
+            new RolesAndGroupsClaimsTransformation(
+                rolesClaimPath: oidcSettings.RolesClaim,
+                groupsClaimPath: oidcSettings.GroupsClaim));
     }
 
     /// <summary>

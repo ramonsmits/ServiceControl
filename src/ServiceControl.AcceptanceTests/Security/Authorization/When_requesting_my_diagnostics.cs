@@ -108,12 +108,12 @@ namespace ServiceControl.AcceptanceTests.Security.Authorization
                 "Claims must include the raw 'realm_access' claim from the IdP");
 
             // The flattened 'role' claim with value 'sc-operator' must be present
-            // (produced by RealmAccessClaimsTransformation — the key diagnostic value).
+            // (produced by RolesAndGroupsClaimsTransformation — the key diagnostic value).
             var hasRoleClaim = claimsArray.Any(c =>
                 c.TryGetProperty("type", out var t) && t.GetString() == "role" &&
                 c.TryGetProperty("value", out var v) && v.GetString() == "sc-operator");
             Assert.That(hasRoleClaim, Is.True,
-                "Claims must include a flattened 'role' claim with value 'sc-operator' (added by RealmAccessClaimsTransformation)");
+                "Claims must include a flattened 'role' claim with value 'sc-operator' (added by RolesAndGroupsClaimsTransformation)");
 
             // Each claim entry must carry an 'issuer' field.
             Assert.That(claimsArray.All(c => c.TryGetProperty("issuer", out _)), Is.True,

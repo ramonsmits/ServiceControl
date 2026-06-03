@@ -43,6 +43,8 @@ public class OpenIdConnectSettings
 
         RbacPolicyFile = SettingsReader.Read(rootNamespace, "Authentication.RbacPolicyFile", "rbac.yaml");
         SubjectDisplayClaim = SettingsReader.Read(rootNamespace, "Authentication.SubjectDisplayClaim", "preferred_username");
+        RolesClaim = SettingsReader.Read(rootNamespace, "Authentication.RolesClaim", "realm_access.roles");
+        GroupsClaim = SettingsReader.Read(rootNamespace, "Authentication.GroupsClaim", "groups");
 
         if (validateConfiguration)
         {
@@ -68,6 +70,35 @@ public class OpenIdConnectSettings
     /// Can be overridden via the Authentication.SubjectDisplayClaim setting.
     /// </summary>
     public string SubjectDisplayClaim { get; }
+
+    /// <summary>
+    /// JWT claim path where role values live. Dotted notation supports two shapes:
+    /// <list type="bullet">
+    ///   <item>
+    ///     <strong>Dotted path</strong> (e.g. <c>realm_access.roles</c>) — the first segment names a
+    ///     top-level claim whose value is a JSON object; the remaining segments navigate into it to
+    ///     find an array of role names. Used by <strong>Keycloak</strong> (default).
+    ///   </item>
+    ///   <item>
+    ///     <strong>Flat claim name</strong> (no dots, e.g. <c>roles</c>) — the JWT may carry the
+    ///     claim repeated, one role per occurrence, or as a single array claim. Used by
+    ///     <strong>Microsoft Entra ID</strong> (<c>roles</c>) and similar. Cognito's
+    ///     <c>cognito:groups</c> works the same way (the colon is part of the claim name, not a path).
+    ///   </item>
+    /// </list>
+    /// Default is <c>realm_access.roles</c> for backward compatibility with Keycloak deployments.
+    /// Can be overridden via the Authentication.RolesClaim setting.
+    /// </summary>
+    public string RolesClaim { get; }
+
+    /// <summary>
+    /// JWT claim path where group values live. Same dotted-vs-flat semantics as
+    /// <see cref="RolesClaim"/>. Default is the flat <c>groups</c> claim, which matches Keycloak's
+    /// <c>oidc-group-membership-mapper</c>, Microsoft Entra ID's group claim, and most others.
+    /// For <strong>AWS Cognito</strong>, set this to <c>cognito:groups</c>.
+    /// Can be overridden via the Authentication.GroupsClaim setting.
+    /// </summary>
+    public string GroupsClaim { get; }
 
     /// <summary>
     /// The OpenID Connect authority URL (issuer). This is the base URL of the identity provider

@@ -209,7 +209,7 @@ namespace ServiceControl.AcceptanceTesting.OpenIdConnect
 
         /// <summary>
         /// Generates a valid JWT token carrying Keycloak-style realm_access roles.
-        /// The <see cref="RealmAccessClaimsTransformation"/> will expand these into
+        /// The <see cref="RolesAndGroupsClaimsTransformation"/> will expand these into
         /// individual <c>role</c> claims so the RBAC evaluator can match them.
         /// </summary>
         /// <param name="subject">The subject (sub) claim.</param>

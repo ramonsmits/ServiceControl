@@ -13,7 +13,7 @@ using ServiceControl.Infrastructure.Auth.Rbac;
 /// Exposes a diagnostic snapshot of the calling user's identity, raw claims, and per-permission state.
 /// Intended for troubleshooting authentication and authorization configuration: the caller can see
 /// exactly which claims arrived from the IdP (Identity Provider), which ones were produced by
-/// <see cref="ServiceControl.Hosting.Auth.RealmAccessClaimsTransformation"/>, and the resulting
+/// <see cref="ServiceControl.Hosting.Auth.RolesAndGroupsClaimsTransformation"/>, and the resulting
 /// permission evaluation against the loaded RBAC (Role-Based Access Control) policy.
 /// <para>
 /// When OIDC is disabled, <see cref="IPermissionEvaluator"/> is not registered in DI and this
@@ -80,7 +80,7 @@ public class MeDiagnosticsController(IServiceProvider serviceProvider) : Control
     static IReadOnlyList<ClaimDescriptor> BuildClaimDescriptors(ClaimsPrincipal user)
     {
         // Flatten all claims across all identities so the caller can see every claim,
-        // including those added by RealmAccessClaimsTransformation.
+        // including those added by RolesAndGroupsClaimsTransformation.
         return user.Claims
             .Select(c => new ClaimDescriptor(c.Type, c.Value, c.Issuer))
             .ToList();
